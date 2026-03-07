@@ -1,5 +1,8 @@
 using ApiMovies.Data;
+using ApiMovies.Repositories.IRepository;
+using ApiMovies.Repositories;
 using Microsoft.EntityFrameworkCore;
+using ApiMovies.MoviesMappers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,18 +10,32 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ConexionSql")));
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// add repositories
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+// add AutoMapper
+builder.Services.AddAutoMapper(_ => { }, typeof(MoviesMapper).Assembly);
+
+// add controllers
+builder.Services.AddControllers();
+
+// add services addEndpointsApiExplorer
+builder.Services.AddEndpointsApiExplorer();
+
+// add services addSwaggerGen
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 var summaries = new[]
 {

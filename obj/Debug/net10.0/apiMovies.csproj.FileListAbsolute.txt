@@ -154,3 +154,11 @@
 /Users/jamesgiraldo/Downloads/net_core/apiMovies/obj/Debug/net10.0/apiMovies.csproj.Up2Date
 /Users/jamesgiraldo/Downloads/net_core/apiMovies/obj/Debug/net10.0/apiMovies.genruntimeconfig.cache
 /Users/jamesgiraldo/Downloads/net_core/apiMovies/obj/Debug/net10.0/ref/apiMovies.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/AutoMapper.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Microsoft.IdentityModel.Logging.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/jamesgiraldo/Downloads/net_core/apiMovies/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
