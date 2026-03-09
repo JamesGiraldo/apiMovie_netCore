@@ -4,7 +4,7 @@ namespace ApiMovies.Models.Dtos;
 
 public class CategoryDto
 {
-    public int id { get; set; }
+    public int Id { get; set; }
 
     [Required(ErrorMessage = "The name is required")]
     [MaxLength(100, ErrorMessage = "The name must be less than 100 characters")]
