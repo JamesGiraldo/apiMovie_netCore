@@ -11,6 +11,8 @@ public interface IUserRepository
 
     Task<User?> GetByUserNameOrEmail(string? userName, string? email, bool isActive = true);
 
+    ICollection<User> SearchUsers(string search, bool isActive = true);
+
     Task<bool> UserExists(int userId, bool isActive = true);
 
     Task<bool> UserNameExists(string userName, bool isActive = true);
@@ -19,9 +21,9 @@ public interface IUserRepository
 
     Task<bool> CreateUser(User user);
 
-    Task<bool> UpdateUser(User user);
+    Task<bool> UpdateUser(int userId, User user);
 
-    Task<bool> DisableUser(int userId, bool isActive = true);
+    Task<bool> DisableUser(int userId);
 
     Task<bool> Save();
 }

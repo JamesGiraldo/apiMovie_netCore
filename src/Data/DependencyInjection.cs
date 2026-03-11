@@ -11,19 +11,20 @@ public static class DependencyInjection
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         // add repositories
+        services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IAuthRepository, AuthRepository>();
         return services;
     }
 
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
         // add services
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMovieService, MovieService>();
-        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
         return services;
     }
 }

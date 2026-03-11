@@ -99,7 +99,7 @@ public class AuthRepository : IAuthRepository {
     ) {
         return new SecurityTokenDescriptor {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(1),
+            Expires = DateTime.UtcNow.AddHours(24),
             SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256Signature)
         };
     }

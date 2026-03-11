@@ -15,7 +15,8 @@ public class UserRepository : IUserRepository
     }
 
     public ICollection<User> GetUsers(bool isActive = true) {
-        return _db.User.Where(u => u.IsActive == isActive)
+        return _db.User
+            .Where(u => u.IsActive == isActive)
             .OrderBy(u => u.Name)
             .ToList();
     }
@@ -37,6 +38,19 @@ public class UserRepository : IUserRepository
         );
     }
 
+    public ICollection<User> SearchUsers(string search, bool isActive = true) {
+        var normalizedSearch = search.Trim().ToLower();
+
+        return _db.User
+            .Where(u => u.IsActive == isActive)
+            .Where(u =>
+                u.Name.ToLower().Contains(normalizedSearch) ||
+                u.Email.ToLower().Contains(normalizedSearch)
+            )
+            .OrderBy(u => u.Name)
+            .ToList();
+    }
+
     public async Task<bool> UserExists(int userId, bool isActive = true) {
         return await _db.User.AnyAsync(u => u.Id == userId && u.IsActive == isActive);
     }
@@ -54,16 +68,24 @@ public class UserRepository : IUserRepository
         return await Save();
     }
 
-    public async Task<bool> UpdateUser(User user) {
-        _db.User.Update(user);
+    public async Task<bool> UpdateUser(int userId, User user) {
+        if (!await UserExists(userId)) return false;
+
+        var existingUser = await GetUser(userId);
+        if (existingUser == null) return false;
+
+        _db.User.Update(existingUser);
         return await Save();
     }
 
-    public async Task<bool> DisableUser(int userId, bool isActive = true) {
-        var user = await GetUser(userId, isActive);
-        if (user == null) return false;
+    public async Task<bool> DisableUser(int userId) {
+        if (!await UserExists(userId)) return false;
 
-        user.IsActive = false;
+        var existingUser = await GetUser(userId);
+        if (existingUser == null) return false;
+
+        existingUser.IsActive = false;
+        _db.User.Update(existingUser);
         return await Save();
     }
 
