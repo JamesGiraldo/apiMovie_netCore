@@ -2,7 +2,7 @@ using ApiMovies.Data;
 using ApiMovies.Common.Responses;
 using ApiMovies.MoviesMappers;
 using ApiMovies.Repositories;
-using ApiMovies.Repositories.IRepository;
+using ApiMovies.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;

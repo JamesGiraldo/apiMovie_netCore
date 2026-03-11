@@ -1,7 +1,7 @@
-using ApiMovies.Repositories.IRepository;
+using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using ApiMovies.Services.IService;
+using ApiMovies.Interfaces.Services;
 using ApiMovies.Services;
 
 namespace ApiMovies.Data;

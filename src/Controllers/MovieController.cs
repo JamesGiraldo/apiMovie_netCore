@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ApiMovies.Common.Responses;
-using ApiMovies.Services.IService;
+using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 
 namespace ApiMovies.Controllers;

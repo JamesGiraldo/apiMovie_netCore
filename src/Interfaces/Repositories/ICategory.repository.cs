@@ -1,6 +1,6 @@
 using ApiMovies.Models;
 
-namespace ApiMovies.Repositories.IRepository;
+namespace ApiMovies.Interfaces.Repositories;
 
 public interface ICategoryRepository
 {

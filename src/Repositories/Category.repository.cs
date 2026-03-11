@@ -1,5 +1,5 @@
 using ApiMovies.Models;
-using ApiMovies.Repositories.IRepository;
+using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
 
 namespace ApiMovies.Repositories;

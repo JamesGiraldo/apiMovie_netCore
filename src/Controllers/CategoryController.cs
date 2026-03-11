@@ -1,5 +1,5 @@
 using ApiMovies.Models.Dtos;
-using ApiMovies.Repositories.IRepository;
+using ApiMovies.Interfaces.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using ApiMovies.Models;

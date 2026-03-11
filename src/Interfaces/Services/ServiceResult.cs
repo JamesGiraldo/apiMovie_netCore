@@ -1,4 +1,4 @@
-namespace ApiMovies.Services.IService;
+namespace ApiMovies.Interfaces.Services;
 
 public class ServiceResult<T>
 {

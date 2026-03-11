@@ -1,9 +1,9 @@
-using ApiMovies.Repositories.IRepository;
-using AutoMapper;
-using ApiMovies.Services.IService;
-using ApiMovies.Models.Dtos;
-using Microsoft.Extensions.Logging;
+using ApiMovies.Interfaces.Repositories;
+using ApiMovies.Interfaces.Services;
 using ApiMovies.Models;
+using ApiMovies.Models.Dtos;
+using AutoMapper;
+using Microsoft.Extensions.Logging;
 
 namespace ApiMovies.Services;
 

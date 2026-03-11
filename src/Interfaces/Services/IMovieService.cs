@@ -1,6 +1,6 @@
 using ApiMovies.Models.Dtos;
 
-namespace ApiMovies.Services.IService;
+namespace ApiMovies.Interfaces.Services;
 
 public interface IMovieService
 {
