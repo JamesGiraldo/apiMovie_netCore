@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ApiMovies.Models.enums;
+using ApiMovies.Models.Enums;
 
 namespace ApiMovies.Models.Entities;
 

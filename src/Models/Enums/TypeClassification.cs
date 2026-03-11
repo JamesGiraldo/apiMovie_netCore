@@ -1,4 +1,4 @@
-namespace ApiMovies.Models.enums;
+namespace ApiMovies.Models.Enums;
 
 public enum TypeClassification
 {

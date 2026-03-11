@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using ApiMovies.Models.enums;
+using ApiMovies.Models.Enums;
 namespace ApiMovies.Models.Dtos;
 
 public class MovieDto
