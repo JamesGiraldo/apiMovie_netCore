@@ -23,14 +23,16 @@ public class CategoryService : ICategoryService
         _logger = logger;
     }
 
-    public ServiceResult<IEnumerable<CategoryDto>> GetCategories() {
+    public ServiceResult<IEnumerable<CategoryDto>> GetCategories(string? search = null) {
         try {
-            var categories = _ctRepo.GetCategories();
+            var categories = _ctRepo.GetCategories(search);
             if (categories.Count == 0) {
                 return FailureList(
                     "NotFound",
                     "Categories not found.",
-                    "No categories were found."
+                    string.IsNullOrWhiteSpace(search)
+                        ? "No categories were found."
+                        : $"No categories were found for search '{search}'."
                 );
             }
 

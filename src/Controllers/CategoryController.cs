@@ -18,10 +18,12 @@ public class CategoryController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetCategories() {
+    public IActionResult GetCategories([FromQuery] string? search) {
         return this.FromServiceResult(
-            _ctService.GetCategories(),
-            successTitle: "Categories retrieved successfully.",
+            _ctService.GetCategories(search),
+            successTitle: string.IsNullOrWhiteSpace(search)
+                ? "Categories retrieved successfully."
+                : "Categories filtered by search successfully.",
             successStatus: StatusCodes.Status200OK
         );
     }

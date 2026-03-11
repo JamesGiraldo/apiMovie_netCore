@@ -4,7 +4,7 @@ namespace ApiMovies.Interfaces.Repositories;
 
 public interface ICategoryRepository
 {
-    ICollection<Category> GetCategories();
+    ICollection<Category> GetCategories(string? search = null);
 
     Category? GetCategory(int CategoryId);
 

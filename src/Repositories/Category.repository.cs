@@ -1,6 +1,7 @@
 using ApiMovies.Models;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiMovies.Repositories;
 
@@ -12,8 +13,10 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public ICollection<Category> GetCategories() {
-        return _context.Categories.OrderBy(c => c.Name).ToList();
+    public ICollection<Category> GetCategories(string? search = null) {
+        IQueryable<Category> query = _context.Categories;
+        query = ApplySearchFilter(query, search);
+        return query.OrderBy(c => c.Name).ToList();
     }
 
     public bool CategoryExists(int categoryId) {
@@ -59,5 +62,12 @@ public class CategoryRepository : ICategoryRepository
 
         _context.Remove(category);
         return Save();
+    }
+
+    private static IQueryable<Category> ApplySearchFilter(IQueryable<Category> query, string? search) {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+
+        var pattern = $"%{search.Trim()}%";
+        return query.Where(c => EF.Functions.ILike(c.Name, pattern));
     }
 }
