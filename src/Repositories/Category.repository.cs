@@ -41,7 +41,6 @@ public class CategoryRepository : ICategoryRepository
 
     public bool UpdateCategory(Category category) {
         category.CreatedAt = DateTime.UtcNow;
-        // Arreglar problema del put
         var categoryExists = _context.Categories.Find(category.Id);
         if (categoryExists != null) {
             _context.Entry(categoryExists).CurrentValues.SetValues(category);

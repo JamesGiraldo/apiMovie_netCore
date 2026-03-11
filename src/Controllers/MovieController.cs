@@ -113,33 +113,4 @@ public class MovieController : ControllerBase
             successStatus: StatusCodes.Status200OK
         );
     }
-
-    private IActionResult FromServiceResult<T>(
-        ServiceResult<T> result,
-        string successTitle,
-        int successStatus = StatusCodes.Status200OK
-    ) {
-        if (result.Succeeded)
-        {
-            return this.ApiSuccess(
-                title: successTitle,
-                statusCode: successStatus,
-                data: result.Value,
-                detail: result.Detail
-            );
-        }
-
-        return this.ApiFailure(
-            title: result.Title ?? "Request failed.",
-            statusCode: MapStatusCode(result.ErrorCode),
-            detail: result.Detail
-        );
-    }
-
-    private static int MapStatusCode(string? errorCode) => errorCode switch {
-        "InvalidPayload" or "InvalidName" or "InvalidId" or "RouteBodyIdMismatch" => StatusCodes.Status400BadRequest,
-        "NotFound" => StatusCodes.Status404NotFound,
-        "DuplicateName" => StatusCodes.Status409Conflict,
-        _ => StatusCodes.Status500InternalServerError
-    };
 }

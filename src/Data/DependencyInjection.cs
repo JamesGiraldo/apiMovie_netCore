@@ -20,6 +20,7 @@ public static class DependencyInjection
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
         // add services
+        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMovieService, MovieService>();
         return services;
     }
