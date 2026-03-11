@@ -13,7 +13,7 @@ namespace apiMovies.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260311144833_user")]
-    partial class user
+    partial class User
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

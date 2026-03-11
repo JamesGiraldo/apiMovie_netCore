@@ -19,12 +19,13 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult GetMovies([FromQuery] string? search) {
-        return this.FromServiceResult(
-            _mService.GetMovies(search),
-            successTitle: string.IsNullOrWhiteSpace(search)
+        var movies = _mService.GetMovies(search);
+        return this.ApiSuccess(
+            title: string.IsNullOrWhiteSpace(search)
                 ? "Movies retrieved successfully."
                 : "Movies filtered by search successfully.",
-            successStatus: StatusCodes.Status200OK
+            statusCode: StatusCodes.Status200OK,
+            data: movies
         );
     }
 
@@ -34,10 +35,11 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetMovie(int movieId) {
-        return this.FromServiceResult(
-            _mService.GetMovie(movieId),
-            successTitle: "Movie retrieved successfully.",
-            successStatus: StatusCodes.Status200OK
+        var movie = _mService.GetMovie(movieId);
+        return this.ApiSuccess(
+            title: "Movie retrieved successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: movie
         );
     }
 
@@ -47,12 +49,13 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetMoviesByCategory(int categoryId, [FromQuery] string? search) {
-        return this.FromServiceResult(
-            _mService.GetMoviesByCategory(categoryId, search),
-            successTitle: string.IsNullOrWhiteSpace(search)
+        var movies = _mService.GetMoviesByCategory(categoryId, search);
+        return this.ApiSuccess(
+            title: string.IsNullOrWhiteSpace(search)
                 ? "Movies by category retrieved successfully."
                 : "Movies by category filtered by search successfully.",
-            successStatus: StatusCodes.Status200OK
+            statusCode: StatusCodes.Status200OK,
+            data: movies
         );
     }
 
@@ -63,10 +66,11 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult CreateMovie([FromBody] MovieCreateDto movieDto) {
-        return this.FromServiceResult(
-            _mService.CreateMovie(movieDto),
-            successTitle: "Movie created successfully.",
-            successStatus: StatusCodes.Status201Created
+        var movie = _mService.CreateMovie(movieDto);
+        return this.ApiSuccess(
+            title: "Movie created successfully.",
+            statusCode: StatusCodes.Status201Created,
+            data: movie
         );
     }
 
@@ -78,10 +82,11 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult UpdateMovie(int movieId, [FromBody] MovieDto movieDto) {
-        return this.FromServiceResult(
-            _mService.UpdateMovie(movieId, movieDto),
-            successTitle: "Movie updated successfully.",
-            successStatus: StatusCodes.Status200OK
+        var movie = _mService.UpdateMovie(movieId, movieDto);
+        return this.ApiSuccess(
+            title: "Movie updated successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: movie
         );
     }
 
@@ -93,10 +98,11 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult ReplaceMovie(int movieId, [FromBody] MovieDto movieDto) {
-        return this.FromServiceResult(
-            _mService.ReplaceMovie(movieId, movieDto),
-            successTitle: "Movie replaced successfully.",
-            successStatus: StatusCodes.Status200OK
+        var movie = _mService.ReplaceMovie(movieId, movieDto);
+        return this.ApiSuccess(
+            title: "Movie replaced successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: movie
         );
     }
 
@@ -107,10 +113,11 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult DeleteMovie(int movieId) {
-        return this.FromServiceResult(
-            _mService.DeleteMovie(movieId),
-            successTitle: "Movie deleted successfully.",
-            successStatus: StatusCodes.Status200OK
+        var movie = _mService.DeleteMovie(movieId);
+        return this.ApiSuccess(
+            title: "Movie deleted successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: movie
         );
     }
 }

@@ -1,5 +1,6 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Interfaces.Services;
+using ApiMovies.Common.Exceptions;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
@@ -23,205 +24,141 @@ public class MovieService : IMovieService
         _logger = logger;
     }
 
-    public ServiceResult<IEnumerable<MovieDto>> GetMovies(string? search = null) {
+    public IEnumerable<MovieDto> GetMovies(string? search = null) {
         try {
             var movies = string.IsNullOrWhiteSpace(search)
                 ? _mRepo.GetMovies()
                 : _mRepo.SearchMovies(search.Trim()).ToList();
 
             if (movies.Count == 0) {
-                return FailureList(
-                    "NotFound",
-                    "Movies not found.",
-                    string.IsNullOrWhiteSpace(search)
-                        ? "No movies were found."
-                        : $"No movies were found for search '{search}'."
-                );
+                var detail = string.IsNullOrWhiteSpace(search)
+                    ? "No movies were found."
+                    : $"No movies were found for search '{search}'.";
+                throw new NotFoundException(detail);
             }
 
-            var moviesDto = _mapper.Map<IEnumerable<MovieDto>>(movies);
-            return ServiceResult<IEnumerable<MovieDto>>.Success(moviesDto);
+            return _mapper.Map<IEnumerable<MovieDto>>(movies);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error getting movies");
-            return FailureList(
-                "Unexpected",
-                "Could not retrieve movies.",
-                "An unexpected error occurred while retrieving movies."
+            throw new InfrastructureException(
+                "An unexpected error occurred while retrieving movies.",
+                ex
             );
         }
     }
 
-    public ServiceResult<IEnumerable<MovieDto>> GetMoviesByCategory(int categoryId, string? search = null) {
+    public IEnumerable<MovieDto> GetMoviesByCategory(int categoryId, string? search = null) {
+        ValidateId(categoryId, "categoryId");
         try {
-            if (categoryId <= 0) {
-                return FailureList(
-                    "InvalidId",
-                    "Invalid category id.",
-                    "categoryId must be greater than 0."
-                );
-            }
-
             var movies = _mRepo.GetMoviesByCategory(categoryId, search);
             if (movies.Count == 0) {
-                return FailureList(
-                    "NotFound",
-                    "Movies not found.",
-                    string.IsNullOrWhiteSpace(search)
-                        ? $"No movies were found for category id {categoryId}."
-                        : $"No movies were found in category id {categoryId} for search '{search}'."
-                );
+                var detail = string.IsNullOrWhiteSpace(search)
+                    ? $"No movies were found for category id {categoryId}."
+                    : $"No movies were found in category id {categoryId} for search '{search}'.";
+                throw new NotFoundException(detail);
             }
 
-            var moviesDto = _mapper.Map<IEnumerable<MovieDto>>(movies);
-            return ServiceResult<IEnumerable<MovieDto>>.Success(moviesDto);
+            return _mapper.Map<IEnumerable<MovieDto>>(movies);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error getting movies by category");
-            return FailureList(
-                "Unexpected",
-                "Could not retrieve movies by category.",
-                "An unexpected error occurred while retrieving movies by category."
+            throw new InfrastructureException(
+                "An unexpected error occurred while retrieving movies by category.",
+                ex
             );
         }
     }
 
-    public ServiceResult<MovieDto> GetMovie(int movieId) {
+    public MovieDto GetMovie(int movieId) {
+        ValidateId(movieId, "movieId");
         try {
-            if (movieId <= 0) {
-                return Failure(
-                    "InvalidId",
-                    "Invalid movie id.",
-                    "movieId must be greater than 0."
-                );
-            }
-
             var movie = _mRepo.GetMovie(movieId);
             if (movie is null) {
-                return Failure(
-                    "NotFound",
-                    "Movie not found.",
-                    $"Movie with id {movieId} was not found."
-                );
+                throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
 
-            return ServiceResult<MovieDto>.Success(_mapper.Map<MovieDto>(movie));
+            return _mapper.Map<MovieDto>(movie);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error getting movie");
-            return Failure(
-                "Unexpected",
-                "Could not get movie",
-                "An unexpected error occurred while getting the movie."
+            throw new InfrastructureException(
+                "An unexpected error occurred while getting the movie.",
+                ex
             );
         }
     }
 
-    public ServiceResult<MovieDto> CreateMovie(MovieCreateDto movieDto) {
-        var validation = ValidateCreateRequest(movieDto);
-        if (!validation.Succeeded) return validation;
-        try
-        {
+    public MovieDto CreateMovie(MovieCreateDto movieDto) {
+        ValidateCreateRequest(movieDto);
+        try {
             var movie = MapCreateDtoToMovie(movieDto);
             var created = _mRepo.CreateMovie(movie);
             if (!created) {
-                return Failure(
-                    "Persistence",
-                    "Could not create movie",
-                    "Could not persist movie changes"
-                );
+                throw new InfrastructureException("Could not persist movie changes.");
             }
 
-            return ServiceResult<MovieDto>.Success(_mapper.Map<MovieDto>(movie));
+            return _mapper.Map<MovieDto>(movie);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error creating movie");
-            return Failure(
-                "Unexpected",
-                "Could not create movie",
-                "An unexpected error occurred while creating the movie."
+            throw new InfrastructureException(
+                "An unexpected error occurred while creating the movie.",
+                ex
             );
         }
     }
 
-    public ServiceResult<MovieDto> UpdateMovie(int movieId, MovieDto movieDto) {
-        var validation = ValidateUpdateRequest(movieId, movieDto);
-        if (!validation.Succeeded) return validation;
-        try
-        {
+    public MovieDto UpdateMovie(int movieId, MovieDto movieDto) {
+        ValidateUpdateRequest(movieId, movieDto);
+        try {
             var movie = MapUpdateDtoToMovie(movieId, movieDto);
             var updated = _mRepo.UpdateMovie(movie);
             if (!updated) {
-                return Failure(
-                    "Persistence",
-                    "Could not update movie",
-                    "Could not persist movie changes"
-                );
+                throw new InfrastructureException("Could not persist movie changes.");
             }
 
-            return ServiceResult<MovieDto>.Success(_mapper.Map<MovieDto>(movie));
+            return _mapper.Map<MovieDto>(movie);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error updating movie");
-            return Failure(
-                "Unexpected",
-                "Could not update movie",
-                "An unexpected error occurred while updating the movie."
+            throw new InfrastructureException(
+                "An unexpected error occurred while updating the movie.",
+                ex
             );
         }
     }
 
-    public ServiceResult<MovieDto> ReplaceMovie(int movieId, MovieDto movieDto) {
-        var validation = ValidateUpdateRequest(movieId, movieDto);
-        if (!validation.Succeeded) return validation;
-        try
-        {
-            var movie = MapUpdateDtoToMovie(movieId, movieDto);
-
-            var replaced = _mRepo.UpdateMovie(movie);
-            if (!replaced) {
-                return Failure(
-                    "Persistence",
-                    "Could not replace movie changes",
-                    "Could not persist movie changes"
-                );
-            }
-
-            return ServiceResult<MovieDto>.Success(_mapper.Map<MovieDto>(movie));
-        } catch (Exception ex) {
-            _logger.LogError(ex, "Error replacing movie");
-            return Failure(
-                "Unexpected",
-                "Could not replace movie changes",
-                "An unexpected error occurred while replacing the movie changes."
-            );
-        }
+    public MovieDto ReplaceMovie(int movieId, MovieDto movieDto) {
+        return UpdateMovie(movieId, movieDto);
     }
 
-    public ServiceResult<MovieDto> DeleteMovie(int movieId) {
-        var validation = ValidateDeleteRequest(movieId);
-        if (!validation.Succeeded) return validation;
+    public MovieDto DeleteMovie(int movieId) {
+        ValidateId(movieId, "movieId");
         try {
             var movieToDelete = _mRepo.GetMovie(movieId);
             if (movieToDelete is null) {
-                return Failure(
-                    "NotFound",
-                    "Movie not found.",
-                    $"Movie with id {movieId} was not found."
-                );
+                throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
 
             var deleted = _mRepo.DeleteMovie(movieId);
             if (!deleted) {
-                return Failure(
-                    "Persistence",
-                    "Could not delete movie",
-                    "Could not persist movie deletion"
-                );
+                throw new InfrastructureException("Could not persist movie deletion.");
             }
 
-            return ServiceResult<MovieDto>.Success(_mapper.Map<MovieDto>(movieToDelete));
+            return _mapper.Map<MovieDto>(movieToDelete);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error deleting movie");
-            return Failure(
-                "Unexpected",
-                "Could not delete movie",
-                "An unexpected error occurred while deleting the movie."
+            throw new InfrastructureException(
+                "An unexpected error occurred while deleting the movie.",
+                ex
             );
         }
     }
@@ -230,56 +167,33 @@ public class MovieService : IMovieService
      * Methods private to validate the create request
     */
 
-    private ServiceResult<MovieDto> ValidateCreateRequest(MovieCreateDto movieDto) {
+    private void ValidateCreateRequest(MovieCreateDto movieDto) {
         if (movieDto is null) {
-            return Failure(
-                "InvalidPayload",
-                "Invalid request payload.",
-                "Movie payload is required."
-            );
+            throw new BadRequestException("Movie payload is required.");
         }
 
         var movieName = movieDto.Name?.Trim();
 
         if (string.IsNullOrWhiteSpace(movieName)) {
-            return Failure(
-                "InvalidName",
-                "Invalid movie name.",
-                "Movie name is required."
-            );
+            throw new BadRequestException("Movie name is required.");
         }
 
         if (_mRepo.ExistsMovieName(movieName)) {
-            return Failure(
-                "DuplicateName",
-                "Movie name already exists.",
+            throw new ConflictException(
                 $"The name '{movieDto.Name}' is already in our records. Please use a different movie name."
             );
         }
-        return ServiceResult<MovieDto>.Success(default!);
     }
 
-    private ServiceResult<MovieDto> ValidateUpdateRequest(int movieId, MovieDto movieDto) {
-        if (movieId <= 0) {
-            return Failure(
-                "InvalidId",
-                "Invalid movie id.",
-                "movieId must be greater than 0."
-            );
-        }
+    private void ValidateUpdateRequest(int movieId, MovieDto movieDto) {
+        ValidateId(movieId, "movieId");
 
         if (movieDto is null) {
-            return Failure(
-                "InvalidPayload",
-                "Invalid request payload.",
-                "Movie payload is required."
-            );
+            throw new BadRequestException("Movie payload is required.");
         }
 
         if (movieDto.Id > 0 && movieDto.Id != movieId) {
-            return Failure(
-                "RouteBodyIdMismatch",
-                "Route id and body id do not match.",
+            throw new BadRequestException(
                 $"Route id '{movieId}' must match body id '{movieDto.Id}'."
             );
         }
@@ -287,55 +201,22 @@ public class MovieService : IMovieService
         var movieName = movieDto.Name?.Trim();
 
         if (string.IsNullOrWhiteSpace(movieName)) {
-            return Failure(
-                "InvalidName",
-                "Invalid movie name.",
-                "Movie name is required."
-            );
+            throw new BadRequestException("Movie name is required.");
         }
 
         var currentMovie = _mRepo.GetMovie(movieId);
         if (currentMovie is null) {
-            return Failure(
-                "NotFound",
-                "Movie not found.",
-                $"Movie with id {movieId} was not found."
-            );
+            throw new NotFoundException($"Movie with id {movieId} was not found.");
         }
 
         var isDuplicatedName = _mRepo.ExistsMovieName(movieName)
             && !string.Equals(currentMovie.Name, movieName, StringComparison.OrdinalIgnoreCase);
 
         if (isDuplicatedName) {
-            return Failure(
-                "DuplicateName",
-                "Movie name already exists.",
+            throw new ConflictException(
                 $"The name '{movieDto.Name}' is already in our records. Please use a different movie name."
             );
         }
-
-        return ServiceResult<MovieDto>.Success(default!);
-    }
-
-    private ServiceResult<MovieDto> ValidateDeleteRequest(int movieId) {
-        if (movieId <= 0) {
-            return Failure(
-                "InvalidId",
-                "Invalid movie id.",
-                "movieId must be greater than 0."
-            );
-        }
-
-        var currentMovie = _mRepo.GetMovie(movieId);
-        if (currentMovie is null) {
-            return Failure(
-                "NotFound",
-                "Movie not found.",
-                $"Movie with id {movieId} was not found."
-            );
-        }
-
-        return ServiceResult<MovieDto>.Success(default!);
     }
 
     private Movie MapCreateDtoToMovie(MovieCreateDto dto) {
@@ -347,22 +228,13 @@ public class MovieService : IMovieService
     private Movie MapUpdateDtoToMovie(int movieId, MovieDto dto) {
         var movie = _mapper.Map<Movie>(dto);
         movie.Id = movieId;
+        movie.Name = dto.Name.Trim();
         return movie;
     }
 
-    private static ServiceResult<MovieDto> Failure(
-        string code,
-        string title,
-        string detail
-    ) {
-        return ServiceResult<MovieDto>.Failure(code, title, detail);
-    }
-
-    private static ServiceResult<IEnumerable<MovieDto>> FailureList(
-        string code,
-        string title,
-        string detail
-    ) {
-        return ServiceResult<IEnumerable<MovieDto>>.Failure(code, title, detail);
+    private static void ValidateId(int id, string paramName) {
+        if (id <= 0) {
+            throw new BadRequestException($"{paramName} must be greater than 0.");
+        }
     }
 }

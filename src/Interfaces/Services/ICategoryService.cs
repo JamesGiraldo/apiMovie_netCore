@@ -4,10 +4,10 @@ namespace ApiMovies.Interfaces.Services;
 
 public interface ICategoryService
 {
-    ServiceResult<IEnumerable<CategoryDto>> GetCategories(string? search = null);
-    ServiceResult<CategoryDto> GetCategory(int categoryId);
-    ServiceResult<CategoryDto> CreateCategory(CategoryCreateDto categoryDto);
-    ServiceResult<CategoryDto> UpdateCategory(int categoryId, CategoryDto categoryDto);
-    ServiceResult<CategoryDto> ReplaceCategory(int categoryId, CategoryDto categoryDto);
-    ServiceResult<CategoryDto> DeleteCategory(int categoryId);
+    IEnumerable<CategoryDto> GetCategories(string? search = null);
+    CategoryDto GetCategory(int categoryId);
+    CategoryDto CreateCategory(CategoryCreateDto categoryDto);
+    CategoryDto UpdateCategory(int categoryId, CategoryDto categoryDto);
+    CategoryDto ReplaceCategory(int categoryId, CategoryDto categoryDto);
+    CategoryDto DeleteCategory(int categoryId);
 }

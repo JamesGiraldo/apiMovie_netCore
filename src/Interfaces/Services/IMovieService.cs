@@ -4,11 +4,11 @@ namespace ApiMovies.Interfaces.Services;
 
 public interface IMovieService
 {
-    public ServiceResult<IEnumerable<MovieDto>> GetMovies(string? search = null);
-    public ServiceResult<IEnumerable<MovieDto>> GetMoviesByCategory(int categoryId, string? search = null);
-    public ServiceResult<MovieDto> GetMovie(int movieId);
-    public ServiceResult<MovieDto> CreateMovie(MovieCreateDto movieDto);
-    public ServiceResult<MovieDto> UpdateMovie(int movieId, MovieDto movieDto);
-    public ServiceResult<MovieDto> ReplaceMovie(int movieId, MovieDto movieDto);
-    public ServiceResult<MovieDto> DeleteMovie(int movieId);
+    IEnumerable<MovieDto> GetMovies(string? search = null);
+    IEnumerable<MovieDto> GetMoviesByCategory(int categoryId, string? search = null);
+    MovieDto GetMovie(int movieId);
+    MovieDto CreateMovie(MovieCreateDto movieDto);
+    MovieDto UpdateMovie(int movieId, MovieDto movieDto);
+    MovieDto ReplaceMovie(int movieId, MovieDto movieDto);
+    MovieDto DeleteMovie(int movieId);
 }

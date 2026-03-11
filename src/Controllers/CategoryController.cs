@@ -19,12 +19,13 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult GetCategories([FromQuery] string? search) {
-        return this.FromServiceResult(
-            _ctService.GetCategories(search),
-            successTitle: string.IsNullOrWhiteSpace(search)
+        var categories = _ctService.GetCategories(search);
+        return this.ApiSuccess(
+            title: string.IsNullOrWhiteSpace(search)
                 ? "Categories retrieved successfully."
                 : "Categories filtered by search successfully.",
-            successStatus: StatusCodes.Status200OK
+            statusCode: StatusCodes.Status200OK,
+            data: categories
         );
     }
 
@@ -34,10 +35,11 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult GetCategory(int categoryId) {
-        return this.FromServiceResult(
-            _ctService.GetCategory(categoryId),
-            successTitle: "Category retrieved successfully.",
-            successStatus: StatusCodes.Status200OK
+        var category = _ctService.GetCategory(categoryId);
+        return this.ApiSuccess(
+            title: "Category retrieved successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: category
         );
     }
 
@@ -48,10 +50,11 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult CreateCategory([FromBody] CategoryCreateDto categoryCreateDto) {
-        return this.FromServiceResult(
-            _ctService.CreateCategory(categoryCreateDto),
-            successTitle: "Category created successfully.",
-            successStatus: StatusCodes.Status201Created
+        var category = _ctService.CreateCategory(categoryCreateDto);
+        return this.ApiSuccess(
+            title: "Category created successfully.",
+            statusCode: StatusCodes.Status201Created,
+            data: category
         );
     }
 
@@ -62,10 +65,11 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult UpdateCategory(int categoryId, [FromBody] CategoryDto dto) {
-        return this.FromServiceResult(
-            _ctService.UpdateCategory(categoryId, dto),
-            successTitle: "Category updated successfully.",
-            successStatus: StatusCodes.Status200OK
+        var category = _ctService.UpdateCategory(categoryId, dto);
+        return this.ApiSuccess(
+            title: "Category updated successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: category
         );
     }
 
@@ -76,10 +80,11 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult ReplaceCategory(int categoryId, [FromBody] CategoryDto dto) {
-        return this.FromServiceResult(
-            _ctService.ReplaceCategory(categoryId, dto),
-            successTitle: "Category replaced successfully.",
-            successStatus: StatusCodes.Status200OK
+        var category = _ctService.ReplaceCategory(categoryId, dto);
+        return this.ApiSuccess(
+            title: "Category replaced successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: category
         );
     }
 
@@ -90,10 +95,11 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult DeleteCategory(int categoryId) {
-        return this.FromServiceResult(
-            _ctService.DeleteCategory(categoryId),
-            successTitle: "Category deleted successfully.",
-            successStatus: StatusCodes.Status200OK
+        var category = _ctService.DeleteCategory(categoryId);
+        return this.ApiSuccess(
+            title: "Category deleted successfully.",
+            statusCode: StatusCodes.Status200OK,
+            data: category
         );
     }
 }

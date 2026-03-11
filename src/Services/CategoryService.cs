@@ -1,5 +1,6 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Interfaces.Services;
+using ApiMovies.Common.Exceptions;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
@@ -23,277 +24,166 @@ public class CategoryService : ICategoryService
         _logger = logger;
     }
 
-    public ServiceResult<IEnumerable<CategoryDto>> GetCategories(string? search = null) {
+    public IEnumerable<CategoryDto> GetCategories(string? search = null) {
         try {
             var categories = _ctRepo.GetCategories(search);
             if (categories.Count == 0) {
-                return FailureList(
-                    "NotFound",
-                    "Categories not found.",
-                    string.IsNullOrWhiteSpace(search)
-                        ? "No categories were found."
-                        : $"No categories were found for search '{search}'."
-                );
+                var detail = string.IsNullOrWhiteSpace(search)
+                    ? "No categories were found."
+                    : $"No categories were found for search '{search}'.";
+                throw new NotFoundException(detail);
             }
 
-            var categoriesDto = _mapper.Map<IEnumerable<CategoryDto>>(categories);
-            return ServiceResult<IEnumerable<CategoryDto>>.Success(categoriesDto);
+            return _mapper.Map<IEnumerable<CategoryDto>>(categories);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error getting categories");
-            return FailureList(
-                "Unexpected",
-                "Could not retrieve categories.",
-                "An unexpected error occurred while retrieving categories."
+            throw new InfrastructureException(
+                "An unexpected error occurred while retrieving categories.",
+                ex
             );
         }
     }
 
-    public ServiceResult<CategoryDto> GetCategory(int categoryId) {
+    public CategoryDto GetCategory(int categoryId) {
+        ValidateId(categoryId);
         try {
-            if (categoryId <= 0) {
-                return Failure(
-                    "InvalidId",
-                    "Invalid category id.",
-                    "categoryId must be greater than 0."
-                );
-            }
-
             var category = _ctRepo.GetCategory(categoryId);
             if (category is null) {
-                return Failure(
-                    "NotFound",
-                    "Category not found.",
-                    $"Category with id {categoryId} was not found."
-                );
+                throw new NotFoundException($"Category with id {categoryId} was not found.");
             }
 
-            return ServiceResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(category));
+            return _mapper.Map<CategoryDto>(category);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error getting category");
-            return Failure(
-                "Unexpected",
-                "Could not retrieve category.",
-                "An unexpected error occurred while retrieving category."
+            throw new InfrastructureException(
+                "An unexpected error occurred while retrieving category.",
+                ex
             );
         }
     }
 
-    public ServiceResult<CategoryDto> CreateCategory(CategoryCreateDto categoryDto) {
-        var validation = ValidateCreateRequest(categoryDto);
-        if (!validation.Succeeded) return validation;
-
+    public CategoryDto CreateCategory(CategoryCreateDto categoryDto) {
+        ValidateCreateRequest(categoryDto);
         try {
             var category = MapCreateDtoToCategory(categoryDto);
             var created = _ctRepo.CreateCategory(category);
             if (!created) {
-                return Failure(
-                    "Persistence",
-                    "Could not create category.",
-                    "Could not persist category changes."
-                );
+                throw new InfrastructureException("Could not persist category changes.");
             }
 
-            return ServiceResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(category));
+            return _mapper.Map<CategoryDto>(category);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error creating category");
-            return Failure(
-                "Unexpected",
-                "Could not create category.",
-                "An unexpected error occurred while creating the category."
+            throw new InfrastructureException(
+                "An unexpected error occurred while creating the category.",
+                ex
             );
         }
     }
 
-    public ServiceResult<CategoryDto> UpdateCategory(int categoryId, CategoryDto categoryDto) {
-        var validation = ValidateUpdateRequest(categoryId, categoryDto);
-        if (!validation.Succeeded) return validation;
-
+    public CategoryDto UpdateCategory(int categoryId, CategoryDto categoryDto) {
+        ValidateUpdateRequest(categoryId, categoryDto);
         try {
             var category = MapUpdateDtoToCategory(categoryId, categoryDto);
             var updated = _ctRepo.UpdateCategory(category);
             if (!updated) {
-                return Failure(
-                    "Persistence",
-                    "Could not update category.",
-                    "Could not persist category changes."
-                );
+                throw new InfrastructureException("Could not persist category changes.");
             }
 
-            return ServiceResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(category));
+            return _mapper.Map<CategoryDto>(category);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error updating category");
-            return Failure(
-                "Unexpected",
-                "Could not update category.",
-                "An unexpected error occurred while updating the category."
+            throw new InfrastructureException(
+                "An unexpected error occurred while updating the category.",
+                ex
             );
         }
     }
 
-    public ServiceResult<CategoryDto> ReplaceCategory(int categoryId, CategoryDto categoryDto) {
-        var validation = ValidateUpdateRequest(categoryId, categoryDto);
-        if (!validation.Succeeded) return validation;
-
-        try {
-            var category = MapUpdateDtoToCategory(categoryId, categoryDto);
-            var replaced = _ctRepo.UpdateCategory(category);
-            if (!replaced) {
-                return Failure(
-                    "Persistence",
-                    "Could not replace category changes.",
-                    "Could not persist category changes."
-                );
-            }
-
-            return ServiceResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(category));
-        } catch (Exception ex) {
-            _logger.LogError(ex, "Error replacing category");
-            return Failure(
-                "Unexpected",
-                "Could not replace category changes.",
-                "An unexpected error occurred while replacing the category changes."
-            );
-        }
+    public CategoryDto ReplaceCategory(int categoryId, CategoryDto categoryDto) {
+        return UpdateCategory(categoryId, categoryDto);
     }
 
-    public ServiceResult<CategoryDto> DeleteCategory(int categoryId) {
-        var validation = ValidateDeleteRequest(categoryId);
-        if (!validation.Succeeded) return validation;
-
+    public CategoryDto DeleteCategory(int categoryId) {
+        ValidateId(categoryId);
         try {
             var categoryToDelete = _ctRepo.GetCategory(categoryId);
             if (categoryToDelete is null) {
-                return Failure(
-                    "NotFound",
-                    "Category not found.",
-                    $"Category with id {categoryId} was not found."
-                );
+                throw new NotFoundException($"Category with id {categoryId} was not found.");
             }
 
             var deleted = _ctRepo.DeleteCategory(categoryId);
             if (!deleted) {
-                return Failure(
-                    "Persistence",
-                    "Could not delete category.",
-                    "Could not persist category deletion."
-                );
+                throw new InfrastructureException("Could not persist category deletion.");
             }
 
-            return ServiceResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(categoryToDelete));
+            return _mapper.Map<CategoryDto>(categoryToDelete);
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
             _logger.LogError(ex, "Error deleting category");
-            return Failure(
-                "Unexpected",
-                "Could not delete category.",
-                "An unexpected error occurred while deleting the category."
+            throw new InfrastructureException(
+                "An unexpected error occurred while deleting the category.",
+                ex
             );
         }
     }
 
-    private ServiceResult<CategoryDto> ValidateCreateRequest(CategoryCreateDto categoryDto) {
+    private void ValidateCreateRequest(CategoryCreateDto categoryDto) {
         if (categoryDto is null) {
-            return Failure(
-                "InvalidPayload",
-                "Invalid request payload.",
-                "Category payload is required."
-            );
+            throw new BadRequestException("Category payload is required.");
         }
 
         var categoryName = categoryDto.Name?.Trim();
         if (string.IsNullOrWhiteSpace(categoryName)) {
-            return Failure(
-                "InvalidName",
-                "Invalid category name.",
-                "Category name is required."
-            );
+            throw new BadRequestException("Category name is required.");
         }
 
         if (_ctRepo.ExistsCategoryName(categoryName)) {
-            return Failure(
-                "DuplicateName",
-                "Category name already exists.",
+            throw new ConflictException(
                 $"The name '{categoryDto.Name}' is already in our records. Please use a different category name."
             );
         }
-
-        return ServiceResult<CategoryDto>.Success(default!);
     }
 
-    private ServiceResult<CategoryDto> ValidateUpdateRequest(int categoryId, CategoryDto categoryDto) {
-        if (categoryId <= 0) {
-            return Failure(
-                "InvalidId",
-                "Invalid category id.",
-                "categoryId must be greater than 0."
-            );
-        }
+    private void ValidateUpdateRequest(int categoryId, CategoryDto categoryDto) {
+        ValidateId(categoryId);
 
         if (categoryDto is null) {
-            return Failure(
-                "InvalidPayload",
-                "Invalid request payload.",
-                "Category payload is required."
-            );
+            throw new BadRequestException("Category payload is required.");
         }
 
         if (categoryDto.Id > 0 && categoryDto.Id != categoryId) {
-            return Failure(
-                "RouteBodyIdMismatch",
-                "Route id and body id do not match.",
+            throw new BadRequestException(
                 $"Route id '{categoryId}' must match body id '{categoryDto.Id}'."
             );
         }
 
         var categoryName = categoryDto.Name?.Trim();
         if (string.IsNullOrWhiteSpace(categoryName)) {
-            return Failure(
-                "InvalidName",
-                "Invalid category name.",
-                "Category name is required."
-            );
+            throw new BadRequestException("Category name is required.");
         }
 
         var currentCategory = _ctRepo.GetCategory(categoryId);
         if (currentCategory is null) {
-            return Failure(
-                "NotFound",
-                "Category not found.",
-                $"Category with id {categoryId} was not found."
-            );
+            throw new NotFoundException($"Category with id {categoryId} was not found.");
         }
 
         var isDuplicatedName = _ctRepo.ExistsCategoryName(categoryName)
             && !string.Equals(currentCategory.Name, categoryName, StringComparison.OrdinalIgnoreCase);
         if (isDuplicatedName) {
-            return Failure(
-                "DuplicateName",
-                "Category name already exists.",
+            throw new ConflictException(
                 $"The name '{categoryDto.Name}' is already in our records. Please use a different category name."
             );
         }
-
-        return ServiceResult<CategoryDto>.Success(default!);
-    }
-
-    private ServiceResult<CategoryDto> ValidateDeleteRequest(int categoryId) {
-        if (categoryId <= 0) {
-            return Failure(
-                "InvalidId",
-                "Invalid category id.",
-                "categoryId must be greater than 0."
-            );
-        }
-
-        var currentCategory = _ctRepo.GetCategory(categoryId);
-        if (currentCategory is null) {
-            return Failure(
-                "NotFound",
-                "Category not found.",
-                $"Category with id {categoryId} was not found."
-            );
-        }
-
-        return ServiceResult<CategoryDto>.Success(default!);
     }
 
     private Category MapCreateDtoToCategory(CategoryCreateDto dto) {
@@ -309,19 +199,9 @@ public class CategoryService : ICategoryService
         return category;
     }
 
-    private static ServiceResult<CategoryDto> Failure(
-        string code,
-        string title,
-        string detail
-    ) {
-        return ServiceResult<CategoryDto>.Failure(code, title, detail);
-    }
-
-    private static ServiceResult<IEnumerable<CategoryDto>> FailureList(
-        string code,
-        string title,
-        string detail
-    ) {
-        return ServiceResult<IEnumerable<CategoryDto>>.Failure(code, title, detail);
+    private static void ValidateId(int categoryId) {
+        if (categoryId <= 0) {
+            throw new BadRequestException("categoryId must be greater than 0.");
+        }
     }
 }
