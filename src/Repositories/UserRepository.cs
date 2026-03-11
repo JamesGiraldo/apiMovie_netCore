@@ -74,6 +74,15 @@ public class UserRepository : IUserRepository
         var existingUser = await GetUser(userId);
         if (existingUser == null) return false;
 
+        existingUser.Name = user.Name;
+        existingUser.UserName = user.UserName;
+        existingUser.Email = user.Email;
+        if (!string.IsNullOrWhiteSpace(user.Password)) {
+            existingUser.Password = user.Password;
+        }
+        existingUser.Role = user.Role;
+        existingUser.UpdatedAt = DateTime.UtcNow;
+
         _db.User.Update(existingUser);
         return await Save();
     }

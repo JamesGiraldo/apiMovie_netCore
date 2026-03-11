@@ -34,8 +34,8 @@ public class UserController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult GetUser(int userId) {
-        var user = _userService.GetUser(userId);
+    public async Task<IActionResult> GetUser(int userId) {
+        var user = await _userService.GetUser(userId);
         return this.ApiSuccess(
             title: "User retrieved successfully.",
             statusCode: StatusCodes.Status200OK,

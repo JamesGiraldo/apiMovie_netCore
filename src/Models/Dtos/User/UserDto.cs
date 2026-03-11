@@ -19,13 +19,5 @@ public class UserDto {
     [MaxLength(100, ErrorMessage = "The email must be less than 100 characters")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "The password is required")]
-    [MaxLength(50, ErrorMessage = "The password must be less than 50 characters")]
-    public string Password { get; set; } = string.Empty;
-
     public string Role { get; set; } = string.Empty;
-
-    public bool IsActive { get; set; } = true;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
