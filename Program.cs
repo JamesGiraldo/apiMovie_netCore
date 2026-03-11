@@ -1,4 +1,5 @@
 using ApiMovies.Data;
+using ApiMovies.Common.Middlewares;
 using ApiMovies.Common.Responses;
 using ApiMovies.MoviesMappers;
 using ApiMovies.Repositories;
@@ -64,6 +65,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.MapControllers();
 
