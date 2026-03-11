@@ -1,4 +1,4 @@
-using ApiMovies.Models;
+using ApiMovies.Models.Entities;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,22 +14,22 @@ public class CategoryRepository : ICategoryRepository
     }
 
     public ICollection<Category> GetCategories(string? search = null) {
-        IQueryable<Category> query = _context.Categories;
+        IQueryable<Category> query = _context.Category;
         query = ApplySearchFilter(query, search);
         return query.OrderBy(c => c.Name).ToList();
     }
 
     public bool CategoryExists(int categoryId) {
-        return _context.Categories.Any(c => c.Id == categoryId);
+        return _context.Category.Any(c => c.Id == categoryId);
     }
 
     public bool ExistsCategoryName(string name) {
-        bool value = _context.Categories.Any(c => c.Name.Trim().ToLower() == name.Trim().ToLower());
+        bool value = _context.Category.Any(c => c.Name.Trim().ToLower() == name.Trim().ToLower());
         return value;
     }
 
     public Category? GetCategory(int categoryId) {
-        return _context.Categories.Where(c => c.Id == categoryId).FirstOrDefault();
+        return _context.Category.Where(c => c.Id == categoryId).FirstOrDefault();
     }
 
     public bool Save() {
@@ -37,14 +37,12 @@ public class CategoryRepository : ICategoryRepository
     }
 
     public bool CreateCategory(Category category) {
-        category.CreatedAt = DateTime.UtcNow;
         _context.Add(category);
         return Save();
     }
 
     public bool UpdateCategory(Category category) {
-        category.CreatedAt = DateTime.UtcNow;
-        var categoryExists = _context.Categories.Find(category.Id);
+        var categoryExists = _context.Category.Find(category.Id);
         if (categoryExists != null) {
             _context.Entry(categoryExists).CurrentValues.SetValues(category);
         } else {

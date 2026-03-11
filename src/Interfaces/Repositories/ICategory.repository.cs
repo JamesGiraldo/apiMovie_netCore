@@ -1,4 +1,4 @@
-using ApiMovies.Models;
+using ApiMovies.Models.Entities;
 
 namespace ApiMovies.Interfaces.Repositories;
 

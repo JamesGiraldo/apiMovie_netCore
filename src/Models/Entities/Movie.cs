@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ApiMovies.Models.enums;
 
-namespace ApiMovies.Models;
+namespace ApiMovies.Models.Entities;
 
 public class Movie
 {
@@ -21,6 +21,8 @@ public class Movie
     public string FilePath { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     [Required]
     public int CategoryId { get; set; }

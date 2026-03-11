@@ -1,4 +1,4 @@
-using ApiMovies.Models;
+using ApiMovies.Models.Entities;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +14,12 @@ public class MovieRepository : IMovieRepository
     }
 
     public ICollection<Movie> GetMovies() {
-        return _db.Movies.OrderBy(m => m.Name).Include(c => c.Category)
+        return _db.Movie.OrderBy(m => m.Name).Include(c => c.Category)
         .ToList();
     }
 
     public ICollection<Movie> GetMoviesByCategory(int categoryId, string? search = null) {
-        IQueryable<Movie> query = _db.Movies
+        IQueryable<Movie> query = _db.Movie
             .Include(c => c.Category)
             .Where(m => m.CategoryId == categoryId);
 
@@ -29,26 +29,25 @@ public class MovieRepository : IMovieRepository
     }
 
     public IEnumerable<Movie> SearchMovies(string name) {
-        IQueryable<Movie> query = _db.Movies;
+        IQueryable<Movie> query = _db.Movie;
         query = ApplySearchFilter(query, name);
 
         return query.ToList();
     }
 
     public Movie? GetMovie(int movieId) {
-        return _db.Movies.AsNoTracking().Where(m => m.Id == movieId).FirstOrDefault();
+        return _db.Movie.AsNoTracking().Where(m => m.Id == movieId).FirstOrDefault();
     }
 
     public bool MovieExists(int movieId) {
-        return _db.Movies.Any(m => m.Id == movieId);
+        return _db.Movie.Any(m => m.Id == movieId);
     }
 
     public bool ExistsMovieName(string name) {
-        return _db.Movies.Any(m => m.Name.Trim().ToLower() == name.Trim().ToLower());
+        return _db.Movie.Any(m => m.Name.Trim().ToLower() == name.Trim().ToLower());
     }
 
     public bool CreateMovie(Movie movie) {
-        movie.CreatedAt = DateTime.UtcNow;
         _db.Add(movie);
         return Save();
     }

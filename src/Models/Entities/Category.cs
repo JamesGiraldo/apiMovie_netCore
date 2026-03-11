@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ApiMovies.Models;
+namespace ApiMovies.Models.Entities;
 
 public class Category
 {
@@ -9,5 +9,6 @@ public class Category
     [Required]
     public string Name { get; set; } = string.Empty;
     [Required]
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
