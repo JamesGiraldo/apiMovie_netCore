@@ -13,4 +13,8 @@ public class UserInfoDto {
 
     public string Role { get; set; } = string.Empty;
 
+    public string? Token { get; set; } = null;
+
+    public DateTime? Expiration { get; set; } = null;
+
 }

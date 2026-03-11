@@ -5,8 +5,8 @@ namespace ApiMovies.Interfaces.Repositories;
 
 public interface IAuthRepository {
 
-    Task<UserLoginResponseDto> LoginUser(UserLoginDto userLoginDto);
+    Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto);
 
-    Task<UserInfoDto> RegisterUser(UserCreateDto userCreateDto);
+    Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto);
 
 }

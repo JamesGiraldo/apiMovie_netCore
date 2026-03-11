@@ -18,7 +18,7 @@ public class AuthService : IAuthService {
         _userRepository = userRepository;
     }
 
-    public async Task<UserLoginResponseDto> LoginUser(UserLoginDto userLoginDto) {
+    public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto) {
         try {
             await ValidateLoginUser(userLoginDto);
             var response = await _authRepository.LoginUser(userLoginDto);
@@ -29,7 +29,7 @@ public class AuthService : IAuthService {
         }
     }
 
-    public async Task<UserInfoDto> RegisterUser(UserCreateDto userCreateDto) {
+    public async Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto) {
         try {
             await ValidateRegisterUser(userCreateDto);
             var response = await _authRepository.RegisterUser(userCreateDto);

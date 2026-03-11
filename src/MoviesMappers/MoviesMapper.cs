@@ -17,6 +17,6 @@ public class MoviesMapper : Profile
         CreateMap<User, UserInfoDto>().ReverseMap();
         CreateMap<User, UserCreateDto>().ReverseMap();
         CreateMap<User, UserLoginDto>().ReverseMap();
-        CreateMap<User, UserLoginResponseDto>().ReverseMap();
+        CreateMap<User, UserResponseDto>().ReverseMap();
     }
 }

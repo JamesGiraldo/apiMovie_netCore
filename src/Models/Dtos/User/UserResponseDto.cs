@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 namespace ApiMovies.Models.Dtos;
 
-public class UserLoginResponseDto {
+public class UserResponseDto {
 
     public string Token { get; set; } = string.Empty;
     public UserInfoDto User { get; set; } = new UserInfoDto();

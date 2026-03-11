@@ -16,7 +16,7 @@ public class AuthController : ControllerBase {
     }
 
     [HttpPost("register")]
-    [ProducesResponseType(201, Type = typeof(UserInfoDto))]
+    [ProducesResponseType(201, Type = typeof(UserResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -31,7 +31,7 @@ public class AuthController : ControllerBase {
     }
 
     [HttpPost("login")]
-    [ProducesResponseType(200, Type = typeof(UserLoginResponseDto))]
+    [ProducesResponseType(200, Type = typeof(UserResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
