@@ -9,4 +9,5 @@ public class ApplicationDbContext : DbContext
 
     // Aqui pasar todas las entidades (Modelos)
     public DbSet<Models.Category> Categories { get; set; }
+    public DbSet<Models.Movie> Movies { get; set; }
 }

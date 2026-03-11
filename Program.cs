@@ -1,23 +1,53 @@
 using ApiMovies.Data;
-using ApiMovies.Repositories.IRepository;
-using ApiMovies.Repositories;
-using Microsoft.EntityFrameworkCore;
+using ApiMovies.Common.Responses;
 using ApiMovies.MoviesMappers;
+using ApiMovies.Repositories;
+using ApiMovies.Repositories.IRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// add DbContext to the container with connection string from appsettings.json
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ConexionSql")));
 
 // add repositories
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddRepositories();
+
+// add services
+builder.Services.AddServices();
 
 // add AutoMapper
 builder.Services.AddAutoMapper(_ => { }, typeof(MoviesMapper).Assembly);
 
 // add controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(entry => entry.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    entry => entry.Key,
+                    entry => entry.Value!.Errors.Select(error => error.ErrorMessage).ToArray()
+                );
+
+            return new BadRequestObjectResult(
+                ApiResponse.Fail(
+                    title: "One or more validation errors occurred.",
+                    status: StatusCodes.Status400BadRequest,
+                    data: errors
+                )
+            );
+        };
+    });
 
 // add services addEndpointsApiExplorer
 builder.Services.AddEndpointsApiExplorer();
