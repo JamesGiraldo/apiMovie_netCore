@@ -2,13 +2,20 @@ using ApiMovies.Data;
 using ApiMovies.Common.Middlewares;
 using ApiMovies.Common.Responses;
 using ApiMovies.MoviesMappers;
-using ApiMovies.Repositories;
-using ApiMovies.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+});
 
 // add DbContext to the container with connection string from appsettings.json
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -56,6 +63,15 @@ builder.Services.AddEndpointsApiExplorer();
 // add services addSwaggerGen
 builder.Services.AddSwaggerGen();
 
+// add services addCors
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -66,7 +82,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<RequestTimingMiddleware>();
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 app.MapControllers();
 
 var summaries = new[]
@@ -76,7 +94,7 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
+    var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),

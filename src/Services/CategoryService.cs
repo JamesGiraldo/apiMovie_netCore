@@ -27,14 +27,15 @@ public class CategoryService : ICategoryService
     public IEnumerable<CategoryDto> GetCategories(string? search = null) {
         try {
             var categories = _ctRepo.GetCategories(search);
-            if (categories.Count == 0) {
-                var detail = string.IsNullOrWhiteSpace(search)
-                    ? "No categories were found."
-                    : $"No categories were found for search '{search}'.";
-                throw new NotFoundException(detail);
+            var hasSearch = !string.IsNullOrWhiteSpace(search);
+
+            if (!hasSearch && categories.Count == 0) {
+                throw new NotFoundException("No categories were found.");
             }
 
-            return _mapper.Map<IEnumerable<CategoryDto>>(categories);
+            var categoriesDto = _mapper.Map<IEnumerable<CategoryDto>>(categories);
+
+            return categoriesDto;
         } catch (AppException) {
             throw;
         } catch (Exception ex) {

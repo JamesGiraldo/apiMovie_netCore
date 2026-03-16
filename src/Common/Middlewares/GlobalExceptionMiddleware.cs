@@ -21,10 +21,23 @@ public class GlobalExceptionMiddleware
         try {
             await _next(context);
         } catch (AppException ex) {
-            _logger.LogWarning(ex, "Handled application exception: {ErrorCode}", ex.ErrorCode);
+            _logger.LogWarning(
+                ex,
+                "Handled application exception {ErrorCode} for {Method} {Path} | TraceId: {TraceId}",
+                ex.ErrorCode,
+                context.Request.Method,
+                context.Request.Path,
+                context.TraceIdentifier
+            );
             await WriteResponseAsync(context, ex.StatusCode, ex.ErrorTitle, ex.Message);
         } catch (Exception ex) {
-            _logger.LogError(ex, "Unhandled exception");
+            _logger.LogError(
+                ex,
+                "Unhandled exception for {Method} {Path} | TraceId: {TraceId}",
+                context.Request.Method,
+                context.Request.Path,
+                context.TraceIdentifier
+            );
             await WriteResponseAsync(
                 context,
                 StatusCodes.Status500InternalServerError,
