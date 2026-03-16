@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ApiMovies.Common.Responses;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMovies.Controllers;
 
@@ -15,6 +16,7 @@ public class MovieController : ControllerBase
         _mService = mService;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -29,6 +31,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [AllowAnonymous]
     [HttpGet("{movieId:int}", Name = "GetMovie")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -43,6 +46,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [AllowAnonymous]
     [HttpGet("category/{categoryId:int}", Name = "GetMoviesByCategory")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -59,6 +63,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(201, Type = typeof(MovieCreateDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -74,6 +79,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPatch("{movieId:int}", Name = "UpdateMovie")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -90,6 +96,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{movieId:int}", Name = "ReplaceMovie")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -106,6 +113,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{movieId:int}", Name = "DeleteMovie")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

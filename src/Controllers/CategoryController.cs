@@ -1,6 +1,7 @@
 using ApiMovies.Common.Responses;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiMovies.Controllers;
@@ -15,7 +16,9 @@ public class CategoryController : ControllerBase
         _ctService = ctService;
     }
 
+    [AllowAnonymous]
     [HttpGet]
+    [ResponseCache(CacheProfileName = "30Seconds")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult GetCategories([FromQuery] string? search) {
@@ -29,6 +32,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    [AllowAnonymous]
     [HttpGet("{categoryId:int}", Name = "GetCategory")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -43,6 +47,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(201, Type = typeof(CategoryCreateDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -58,6 +63,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPatch("{categoryId:int}", Name = "UpdateCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -73,6 +79,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{categoryId:int}", Name = "ReplaceCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -88,6 +95,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{categoryId:int}", Name = "DeleteCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ApiMovies.Common.Responses;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMovies.Controllers;
 
@@ -15,6 +16,7 @@ public class UserController : ControllerBase {
         _userService = userService;
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(IEnumerable<UserDto>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -29,6 +31,7 @@ public class UserController : ControllerBase {
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet("{userId:int}", Name = "GetUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,6 +46,7 @@ public class UserController : ControllerBase {
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{userId:int}", Name = "UpdateUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -57,6 +61,7 @@ public class UserController : ControllerBase {
         );
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{userId:int}", Name = "DeleteUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

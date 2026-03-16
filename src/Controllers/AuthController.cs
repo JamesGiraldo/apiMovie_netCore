@@ -2,6 +2,7 @@ using ApiMovies.Common.Responses;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMovies.Controllers;
 
@@ -15,6 +16,7 @@ public class AuthController : ControllerBase {
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     [ProducesResponseType(201, Type = typeof(UserResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -30,6 +32,7 @@ public class AuthController : ControllerBase {
         );
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(200, Type = typeof(UserResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
