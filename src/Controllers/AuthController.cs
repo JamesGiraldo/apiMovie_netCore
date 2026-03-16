@@ -3,11 +3,13 @@ using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 
 namespace ApiMovies.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/auth")]
 [ApiController]
+[ApiVersionNeutral]
 public class AuthController : ControllerBase {
 
     private readonly IAuthService _authService;

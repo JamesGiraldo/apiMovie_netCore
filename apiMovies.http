@@ -1,6 +1,19 @@
 @apiMovies_HostAddress = http://localhost:5080
 
-GET {{apiMovies_HostAddress}}/weatherforecast/
+### Get all auth
+GET {{apiMovies_HostAddress}}/api/v1/auth
+Accept: application/json
+
+### Get all categories
+GET {{apiMovies_HostAddress}}/api/v1/category
+Accept: application/json
+
+### Get all Movies
+GET {{apiMovies_HostAddress}}/api/v1/movie
+Accept: application/json
+
+### Get all Users
+GET {{apiMovies_HostAddress}}/api/v1/user
 Accept: application/json
 
 ###

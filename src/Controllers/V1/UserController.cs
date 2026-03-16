@@ -4,9 +4,9 @@ using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 
-namespace ApiMovies.Controllers;
+namespace ApiMovies.Controllers.V1;
 
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/user")]
 [ApiController]
 public class UserController : ControllerBase {
 

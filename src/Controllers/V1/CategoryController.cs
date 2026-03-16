@@ -4,9 +4,9 @@ using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiMovies.Controllers;
+namespace ApiMovies.Controllers.V1;
 
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/category")]
 [ApiController]
 public class CategoryController : ControllerBase
 {

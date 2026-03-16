@@ -24,8 +24,39 @@ public static class SwaggerServiceCollectionExtensions
                     new List<string>()
                 }
             });
+
+            options.SwaggerDoc("v1", new OpenApiInfo {
+                Version = "v1",
+                Title = "Api Movies v1",
+                Description = "Api for managing movies",
+                Contact = new OpenApiContact {
+                    Name = "James Giraldo",
+                    Email = "jamesgiraldo@gmail.com",
+                    Url = new Uri("https://github.com/jamesgiraldo")
+                },
+                License = new OpenApiLicense {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
+                }
+            });
+
+            options.SwaggerDoc("v2", new OpenApiInfo {
+                Version = "v2",
+                Title = "Api Movies v2",
+                Description = "Api for managing movies",
+                Contact = new OpenApiContact {
+                    Name = "James Giraldo",
+                    Email = "jamesgiraldo@gmail.com",
+                    Url = new Uri("https://github.com/jamesgiraldo")
+                },
+                License = new OpenApiLicense {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
+                }
+            });
         });
 
         return services;
     }
+
 }
