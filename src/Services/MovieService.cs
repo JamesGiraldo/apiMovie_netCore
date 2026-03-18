@@ -1,6 +1,7 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Common.Exceptions;
+using ApiMovies.Common.Pagination;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
@@ -26,7 +27,7 @@ public class MovieService : IMovieService
         _fileStorageService = fileStorageService;
     }
 
-    public async Task<IEnumerable<MovieDto>> GetMovies(string? search = null) {
+    public async Task<PagedResult<MovieDto>> GetMovies(string? search = null, PaginationQuery? paginationQuery = null) {
         try {
             var movies = string.IsNullOrWhiteSpace(search)
                 ? await _movieRepository.GetMovies()
@@ -39,7 +40,15 @@ public class MovieService : IMovieService
                 throw new NotFoundException(detail);
             }
 
-            return movies.Select(ToMovieDtoWithUrls).ToList();
+            var pagedMovies = movies.ToPagedResult(paginationQuery);
+            var moviesResponse = pagedMovies.Items.Select(ToMovieDtoWithUrls).ToList();
+
+            return new PagedResult<MovieDto>(
+                moviesResponse,
+                pagedMovies.TotalCount,
+                pagedMovies.PageNumber,
+                pagedMovies.PageSize
+            );
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -51,7 +60,11 @@ public class MovieService : IMovieService
         }
     }
 
-    public async Task<IEnumerable<MovieDto>> GetMoviesByCategory(int categoryId, string? search = null) {
+    public async Task<PagedResult<MovieDto>> GetMoviesByCategory(
+        int categoryId,
+        string? search = null,
+        PaginationQuery? paginationQuery = null
+    ) {
         ValidateId(categoryId, "categoryId");
         try {
             var movies = await _movieRepository.GetMoviesByCategory(categoryId, search);
@@ -62,7 +75,15 @@ public class MovieService : IMovieService
                 throw new NotFoundException(detail);
             }
 
-            return movies.Select(ToMovieDtoWithUrls).ToList();
+            var pagedMovies = movies.ToPagedResult(paginationQuery);
+            var moviesResponse = pagedMovies.Items.Select(ToMovieDtoWithUrls).ToList();
+
+            return new PagedResult<MovieDto>(
+                moviesResponse,
+                pagedMovies.TotalCount,
+                pagedMovies.PageNumber,
+                pagedMovies.PageSize
+            );
         } catch (AppException) {
             throw;
         } catch (Exception ex) {

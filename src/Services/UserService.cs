@@ -1,6 +1,7 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Common.Exceptions;
+using ApiMovies.Common.Pagination;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
@@ -30,7 +31,7 @@ public class UserService : IUserService {
         _fileStorageService = fileStorageService;
     }
 
-    public async Task<ICollection<UserDto>> GetUsers(string? search = null) {
+    public async Task<PagedResult<UserDto>> GetUsers(string? search = null, PaginationQuery? paginationQuery = null) {
         try {
             var users = string.IsNullOrWhiteSpace(search)
                 ? _userRepository.GetUsers(isActive: true)
@@ -41,12 +42,19 @@ public class UserService : IUserService {
                     : "No users were found.";
                 throw new NotFoundException(detail);
             }
-            var usersResponse = new List<UserDto>(users.Count);
-            foreach (var user in users) {
+
+            var pagedUsers = users.ToPagedResult(paginationQuery);
+            var usersResponse = new List<UserDto>(pagedUsers.Items.Count);
+            foreach (var user in pagedUsers.Items) {
                 usersResponse.Add(await MapUserWithRolesAsync(user));
             }
 
-            return usersResponse;
+            return new PagedResult<UserDto>(
+                usersResponse,
+                pagedUsers.TotalCount,
+                pagedUsers.PageNumber,
+                pagedUsers.PageSize
+            );
         } catch (AppException) {
             throw;
         } catch (Exception ex) {

@@ -1,6 +1,7 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Common.Exceptions;
+using ApiMovies.Common.Pagination;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
@@ -24,7 +25,7 @@ public class CategoryService : ICategoryService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<CategoryDto>> GetCategories(string? search = null) {
+    public async Task<PagedResult<CategoryDto>> GetCategories(string? search = null, PaginationQuery? paginationQuery = null) {
         try {
             var categories = await _categoryRepository.GetCategories(search);
             var hasSearch = !string.IsNullOrWhiteSpace(search);
@@ -33,9 +34,15 @@ public class CategoryService : ICategoryService
                 throw new NotFoundException("No categories were found.");
             }
 
-            var categoriesDto = _mapper.Map<IEnumerable<CategoryDto>>(categories);
+            var pagedCategories = categories.ToPagedResult(paginationQuery);
+            var categoriesDto = _mapper.Map<IReadOnlyCollection<CategoryDto>>(pagedCategories.Items);
 
-            return categoriesDto;
+            return new PagedResult<CategoryDto>(
+                categoriesDto,
+                pagedCategories.TotalCount,
+                pagedCategories.PageNumber,
+                pagedCategories.PageSize
+            );
         } catch (AppException) {
             throw;
         } catch (Exception ex) {

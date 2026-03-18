@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ApiMovies.Common.Responses;
+using ApiMovies.Common.Pagination;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -8,22 +9,34 @@ namespace ApiMovies.Controllers.V1;
 
 [Route("api/v{version:apiVersion}/user")]
 [ApiController]
-public class UserController : ControllerBase {
+public class UserController : ControllerBase
+{
 
     private readonly IUserService _userService;
 
-    public UserController(IUserService userService) {
+    public UserController(IUserService userService)
+    {
         _userService = userService;
     }
 
     // [Authorize(Roles = "Admin")]
     [HttpGet]
-    [ProducesResponseType(200, Type = typeof(IEnumerable<UserDto>))]
+    [ProducesResponseType(200, Type = typeof(PagedResult<UserDto>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUsers([FromQuery] string? search = null) {
-        var users = await _userService.GetUsers(search: search);
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] string? search = null,
+        [FromQuery] int pageNumber = PaginationQuery.DefaultPageNumber,
+        [FromQuery] int pageSize = PaginationQuery.DefaultPageSize
+    )
+    {
+        var paginationQuery = new PaginationQuery {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var users = await _userService.GetUsers(search: search, paginationQuery: paginationQuery);
         return this.ApiSuccess(
             title: "Users retrieved successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -37,7 +50,8 @@ public class UserController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUser(string userId) {
+    public async Task<IActionResult> GetUser(string userId)
+    {
         var user = await _userService.GetUser(userId);
         return this.ApiSuccess(
             title: "User retrieved successfully.",
@@ -53,7 +67,8 @@ public class UserController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUser(string userId, [FromForm] UserUpdateDto userDto) {
+    public async Task<IActionResult> UpdateUser(string userId, [FromForm] UserUpdateDto userDto)
+    {
         var user = await _userService.UpdateUser(userId, userDto);
         return this.ApiSuccess(
             title: "User updated successfully.",
@@ -68,7 +83,8 @@ public class UserController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ActivateUser(string userId) {
+    public async Task<IActionResult> ActivateUser(string userId)
+    {
         var user = await _userService.ActivateUser(userId);
         return this.ApiSuccess(
             title: "User activated successfully.",
@@ -83,7 +99,8 @@ public class UserController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteUser(string userId) {
+    public async Task<IActionResult> DeleteUser(string userId)
+    {
         var user = await _userService.DeleteUser(userId);
         return this.ApiSuccess(
             title: "User deleted successfully.",

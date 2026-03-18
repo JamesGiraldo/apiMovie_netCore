@@ -1,4 +1,5 @@
 using ApiMovies.Common.Responses;
+using ApiMovies.Common.Pagination;
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,8 @@ public class CategoryController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
 
-    public CategoryController(ICategoryService categoryService) {
+    public CategoryController(ICategoryService categoryService)
+    {
         _categoryService = categoryService;
     }
 
@@ -20,9 +22,19 @@ public class CategoryController : ControllerBase
     [HttpGet]
     [ResponseCache(CacheProfileName = "30Seconds")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetCategories([FromQuery] string? search) {
-        var categories = await _categoryService.GetCategories(search);
+    [ProducesResponseType(200, Type = typeof(PagedResult<CategoryDto>))]
+    public async Task<IActionResult> GetCategories(
+        [FromQuery] string? search,
+        [FromQuery] int pageNumber = PaginationQuery.DefaultPageNumber,
+        [FromQuery] int pageSize = PaginationQuery.DefaultPageSize
+    )
+    {
+        var paginationQuery = new PaginationQuery {
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        var categories = await _categoryService.GetCategories(search, paginationQuery);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Categories retrieved successfully."
@@ -38,7 +50,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCategory(int categoryId) {
+    public async Task<IActionResult> GetCategory(int categoryId)
+    {
         var category = await _categoryService.GetCategory(categoryId);
         return this.ApiSuccess(
             title: "Category retrieved successfully.",
@@ -54,7 +67,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryCreateDto) {
+    public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryCreateDto)
+    {
         var category = await _categoryService.CreateCategory(categoryCreateDto);
         return this.ApiSuccess(
             title: "Category created successfully.",
@@ -70,7 +84,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto dto) {
+    public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto dto)
+    {
         var category = await _categoryService.UpdateCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category updated successfully.",
@@ -86,7 +101,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ReplaceCategory(int categoryId, [FromBody] CategoryDto dto) {
+    public async Task<IActionResult> ReplaceCategory(int categoryId, [FromBody] CategoryDto dto)
+    {
         var category = await _categoryService.ReplaceCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category replaced successfully.",
@@ -102,7 +118,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteCategory(int categoryId) {
+    public async Task<IActionResult> DeleteCategory(int categoryId)
+    {
         var category = await _categoryService.DeleteCategory(categoryId);
         return this.ApiSuccess(
             title: "Category deleted successfully.",
