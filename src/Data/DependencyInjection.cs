@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         return services;
     }
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMovieService, MovieService>();
+        services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IUserResponseFactory, UserResponseFactory>();
         services.AddScoped<IUserService, UserService>();

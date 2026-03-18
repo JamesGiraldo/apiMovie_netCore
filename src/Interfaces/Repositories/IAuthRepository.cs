@@ -9,13 +9,7 @@ public interface IAuthRepository {
 
     Task<bool> ValidatePassword(User user, string password);
 
-    Task<IList<string>> GetUserRoles(User user);
-
     Task<User> RegisterUser(UserCreateDto userCreateDto);
-
-    Task EnsureDefaultRoles();
-
-    Task AddUserToRole(User user, string roleName);
 
     Task UpdateUser(User user);
 

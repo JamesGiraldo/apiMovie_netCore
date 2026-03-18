@@ -9,16 +9,13 @@ public class AuthRepository : IAuthRepository {
 
     private readonly IUserRepository _userRepository;
     private readonly UserManager<User> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
 
     public AuthRepository(
         IUserRepository userRepository,
-        UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager
+        UserManager<User> userManager
     ) {
         _userRepository = userRepository;
         _userManager = userManager;
-        _roleManager = roleManager;
     }
 
     public async Task<User?> GetUserForLogin(string? userName, string? email) {
@@ -27,10 +24,6 @@ public class AuthRepository : IAuthRepository {
 
     public async Task<bool> ValidatePassword(User user, string password) {
         return await _userManager.CheckPasswordAsync(user, password);
-    }
-
-    public async Task<IList<string>> GetUserRoles(User user) {
-        return await _userManager.GetRolesAsync(user);
     }
 
     public async Task<User> RegisterUser(UserCreateDto userCreateDto) {
@@ -52,24 +45,6 @@ public class AuthRepository : IAuthRepository {
         }
 
         return user;
-    }
-
-    public async Task EnsureDefaultRoles() {
-        if (!await _roleManager.RoleExistsAsync("Admin")) {
-            await _roleManager.CreateAsync(new IdentityRole("Admin"));
-        }
-
-        if (!await _roleManager.RoleExistsAsync("Registered")) {
-            await _roleManager.CreateAsync(new IdentityRole("Registered"));
-        }
-    }
-
-    public async Task AddUserToRole(User user, string roleName) {
-        var result = await _userManager.AddToRoleAsync(user, roleName);
-        if (!result.Succeeded) {
-            var errors = string.Join(" | ", result.Errors.Select(e => e.Description));
-            throw new InfrastructureException($"Could not add user to role '{roleName}'. {errors}");
-        }
     }
 
     public async Task UpdateUser(User user) {

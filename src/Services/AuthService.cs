@@ -1,6 +1,7 @@
 using ApiMovies.Interfaces.Services;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Models.Dtos;
+using ApiMovies.Common.Constants;
 using ApiMovies.Common.Exceptions;
 
 namespace ApiMovies.Services;
@@ -9,17 +10,20 @@ public class AuthService : IAuthService {
 
     private readonly IAuthRepository _authRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IRoleService _roleService;
     private readonly IFileStorageService _fileStorageService;
     private readonly IUserResponseFactory _userResponseFactory;
 
     public AuthService(
         IAuthRepository authRepository,
         IUserRepository userRepository,
+        IRoleService roleService,
         IFileStorageService fileStorageService,
         IUserResponseFactory userResponseFactory
     ) {
         _authRepository = authRepository;
         _userRepository = userRepository;
+        _roleService = roleService;
         _fileStorageService = fileStorageService;
         _userResponseFactory = userResponseFactory;
     }
@@ -39,7 +43,7 @@ public class AuthService : IAuthService {
                 throw new UnauthorizedException(InvalidCredentialsMessage);
             }
 
-            var roles = await _authRepository.GetUserRoles(user);
+            var roles = await _roleService.GetUserRoles(user.Id);
             var response = _userResponseFactory.Create(user, roles);
 
             return response;
@@ -57,8 +61,7 @@ public class AuthService : IAuthService {
         try {
             await ValidateRegisterUserAsync(userCreateDto);
             var user = await _authRepository.RegisterUser(userCreateDto);
-            await _authRepository.EnsureDefaultRoles();
-            await _authRepository.AddUserToRole(user, "Admin");
+            await _roleService.EnsureUserHasRole(user.Id, RoleNames.Registered);
 
             if (userCreateDto.Image is not null) {
                 var uploadResult = await _fileStorageService.UploadImageAsync(userCreateDto.Image, "users", user.Id);
@@ -72,7 +75,7 @@ public class AuthService : IAuthService {
                 }
             }
 
-            var roles = await _authRepository.GetUserRoles(user);
+            var roles = await _roleService.GetUserRoles(user.Id);
             var response = _userResponseFactory.Create(user, roles);
 
             return response;
@@ -85,6 +88,7 @@ public class AuthService : IAuthService {
             );
         }
     }
+
 
     private static void ValidateLoginUser(UserLoginDto userLoginDto) {
         if (string.IsNullOrWhiteSpace(userLoginDto.UserName) && string.IsNullOrWhiteSpace(userLoginDto.Email)) {
