@@ -53,7 +53,7 @@ public class RequestTimingMiddleware
             var statusCode = requestException is null
                 ? context.Response.StatusCode
                 : StatusCodes.Status500InternalServerError;
-            var logLevel = GetLogLevel(statusCode, elapsedMs);
+            var logLevel = GetLogLevel(statusCode, elapsedMs, requestException is not null);
             var completedColor = GetColor(logLevel);
 
             _logger.Log(
@@ -64,8 +64,14 @@ public class RequestTimingMiddleware
         }
     }
 
-    private static LogLevel GetLogLevel(int statusCode, double elapsedMs)
+    private static LogLevel GetLogLevel(int statusCode, double elapsedMs, bool hasException)
     {
+        if (hasException)
+        {
+            // GlobalExceptionMiddleware already logs full details for failures.
+            return LogLevel.Warning;
+        }
+
         if (statusCode >= StatusCodes.Status500InternalServerError)
         {
             return LogLevel.Error;

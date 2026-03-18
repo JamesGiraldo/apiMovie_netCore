@@ -22,12 +22,13 @@ public class GlobalExceptionMiddleware
             await _next(context);
         } catch (AppException ex) {
             _logger.LogWarning(
-                ex,
-                "Handled application exception {ErrorCode} for {Method} {Path} | TraceId: {TraceId}",
+                "Handled application exception {ErrorCode} [{StatusCode}] for {Method} {Path} | TraceId: {TraceId} | Detail: {Detail}",
                 ex.ErrorCode,
+                ex.StatusCode,
                 context.Request.Method,
                 context.Request.Path,
-                context.TraceIdentifier
+                context.TraceIdentifier,
+                ex.Message
             );
             await WriteResponseAsync(context, ex.StatusCode, ex.ErrorTitle, ex.Message);
         } catch (Exception ex) {

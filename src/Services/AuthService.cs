@@ -24,8 +24,13 @@ public class AuthService : IAuthService {
             var response = await _authRepository.LoginUser(userLoginDto);
 
             return response;
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
-            throw new BadRequestException(ex.Message);
+            throw new InfrastructureException(
+                "An unexpected error occurred while logging in.",
+                ex
+            );
         }
     }
 
@@ -35,8 +40,13 @@ public class AuthService : IAuthService {
             var response = await _authRepository.RegisterUser(userCreateDto);
 
             return response;
+        } catch (AppException) {
+            throw;
         } catch (Exception ex) {
-            throw new BadRequestException(ex.Message);
+            throw new InfrastructureException(
+                "An unexpected error occurred while registering the user.",
+                ex
+            );
         }
     }
 

@@ -38,10 +38,12 @@ public class AuthRepository : IAuthRepository {
             userLoginDto.Email
         );
 
-        if (user is null) throw new NotFoundException("User not found or invalid user name or email.");
+        const string InvalidCredentialsMessage = "Invalid credentials.";
+
+        if (user is null) throw new UnauthorizedException(InvalidCredentialsMessage);
 
         var isValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
-        if (!isValid) throw new NotFoundException("User not found or invalid user name or email or password.");
+        if (!isValid) throw new UnauthorizedException(InvalidCredentialsMessage);
 
         var roles = await _userManager.GetRolesAsync(user);
         var userInfo = _mapper.Map<UserInfoDto>(user);
