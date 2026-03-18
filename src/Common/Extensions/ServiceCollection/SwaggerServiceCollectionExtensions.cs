@@ -58,5 +58,4 @@ public static class SwaggerServiceCollectionExtensions
 
         return services;
     }
-
 }
