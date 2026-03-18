@@ -10,10 +10,10 @@ namespace ApiMovies.Controllers.V1;
 [ApiController]
 public class CategoryController : ControllerBase
 {
-    private readonly ICategoryService _ctService;
+    private readonly ICategoryService _categoryService;
 
-    public CategoryController(ICategoryService ctService) {
-        _ctService = ctService;
+    public CategoryController(ICategoryService categoryService) {
+        _categoryService = categoryService;
     }
 
     [AllowAnonymous]
@@ -22,7 +22,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCategories([FromQuery] string? search) {
-        var categories = await _ctService.GetCategories(search);
+        var categories = await _categoryService.GetCategories(search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Categories retrieved successfully."
@@ -39,7 +39,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCategory(int categoryId) {
-        var category = await _ctService.GetCategory(categoryId);
+        var category = await _categoryService.GetCategory(categoryId);
         return this.ApiSuccess(
             title: "Category retrieved successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -55,7 +55,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryCreateDto) {
-        var category = await _ctService.CreateCategory(categoryCreateDto);
+        var category = await _categoryService.CreateCategory(categoryCreateDto);
         return this.ApiSuccess(
             title: "Category created successfully.",
             statusCode: StatusCodes.Status201Created,
@@ -71,7 +71,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto dto) {
-        var category = await _ctService.UpdateCategory(categoryId, dto);
+        var category = await _categoryService.UpdateCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category updated successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -87,7 +87,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ReplaceCategory(int categoryId, [FromBody] CategoryDto dto) {
-        var category = await _ctService.ReplaceCategory(categoryId, dto);
+        var category = await _categoryService.ReplaceCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category replaced successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -103,7 +103,7 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteCategory(int categoryId) {
-        var category = await _ctService.DeleteCategory(categoryId);
+        var category = await _categoryService.DeleteCategory(categoryId);
         return this.ApiSuccess(
             title: "Category deleted successfully.",
             statusCode: StatusCodes.Status200OK,

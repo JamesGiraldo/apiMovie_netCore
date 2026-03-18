@@ -10,10 +10,10 @@ namespace ApiMovies.Controllers.V1;
 [ApiController]
 public class MovieController : ControllerBase
 {
-    private readonly IMovieService _mService;
+    private readonly IMovieService _movieService;
 
-    public MovieController(IMovieService mService) {
-        _mService = mService;
+    public MovieController(IMovieService movieService) {
+        _movieService = movieService;
     }
 
     [AllowAnonymous]
@@ -21,7 +21,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMovies([FromQuery] string? search) {
-        var movies = await _mService.GetMovies(search);
+        var movies = await _movieService.GetMovies(search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Movies retrieved successfully."
@@ -38,7 +38,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMovie(int movieId) {
-        var movie = await _mService.GetMovie(movieId);
+        var movie = await _movieService.GetMovie(movieId);
         return this.ApiSuccess(
             title: "Movie retrieved successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -53,7 +53,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMoviesByCategory(int categoryId, [FromQuery] string? search) {
-        var movies = await _mService.GetMoviesByCategory(categoryId, search);
+        var movies = await _movieService.GetMoviesByCategory(categoryId, search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Movies by category retrieved successfully."
@@ -72,7 +72,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateMovie([FromForm] MovieCreateDto movieDto) {
-        var movie = await _mService.CreateMovie(movieDto);
+        var movie = await _movieService.CreateMovie(movieDto);
         return this.ApiSuccess(
             title: "Movie created successfully.",
             statusCode: StatusCodes.Status201Created,
@@ -90,7 +90,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateMovie(int movieId, [FromForm] MovieUpdateDto movieDto) {
-        var movie = await _mService.UpdateMovie(movieId, movieDto);
+        var movie = await _movieService.UpdateMovie(movieId, movieDto);
         return this.ApiSuccess(
             title: "Movie updated successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -108,7 +108,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ReplaceMovie(int movieId, [FromForm] MovieUpdateDto movieDto) {
-        var movie = await _mService.ReplaceMovie(movieId, movieDto);
+        var movie = await _movieService.ReplaceMovie(movieId, movieDto);
         return this.ApiSuccess(
             title: "Movie replaced successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -124,7 +124,7 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteMovie(int movieId) {
-        var movie = await _mService.DeleteMovie(movieId);
+        var movie = await _movieService.DeleteMovie(movieId);
         return this.ApiSuccess(
             title: "Movie deleted successfully.",
             statusCode: StatusCodes.Status200OK,
