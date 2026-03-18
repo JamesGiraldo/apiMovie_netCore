@@ -1,20 +1,21 @@
-using System.ComponentModel.DataAnnotations;
 namespace ApiMovies.Models.Dtos;
 
 public class UserInfoDto {
 
-    public int Id { get; set; } = 0;
+    public string Id { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
 
+    public string LastName { get; set; } = string.Empty;
+
     public string UserName { get; set; } = string.Empty;
+
+    public string PhoneNumber { get; set; } = string.Empty;
 
     public string Email { get; set; } = string.Empty;
 
-    public string Role { get; set; } = string.Empty;
+    public string? Image { get; set; } = null;
 
-    public string? Token { get; set; } = null;
-
-    public DateTime? Expiration { get; set; } = null;
+    public List<string> Roles { get; set; } = new List<string>();
 
 }

@@ -10,6 +10,7 @@ namespace ApiMovies.Controllers.V2;
 public class TestController : ControllerBase
 {
     [HttpGet]
+    // [Obsolete("This method is obsolete. Use GetTest2 instead.")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
     public IActionResult GetTest() {
         return this.ApiSuccess(

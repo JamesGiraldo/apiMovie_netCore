@@ -1,8 +1,8 @@
 using ApiMovies.Models.Entities;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
-using ApiMovies.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
+using ApiMovies.Common.Exceptions;
 
 namespace ApiMovies.Repositories;
 
@@ -21,54 +21,58 @@ public class UserRepository : IUserRepository
             .ToList();
     }
 
-    public async Task<User?> GetUser(int userId, bool isActive = true) {
-        return await _db.User.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive == isActive);
+    public async Task<User?> GetUser(string userId) {
+        return await _db.User.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     public async Task<User?> GetByUserNameOrEmail(string? userName, string? email, bool isActive = true) {
-        var normalizedUserName = userName?.Trim().ToLower();
-        var normalizedEmail = email?.Trim().ToLower();
+        var normalizedUserName = string.IsNullOrWhiteSpace(userName)
+            ? null
+            : userName.Trim().ToUpperInvariant();
+        var normalizedEmail = string.IsNullOrWhiteSpace(email)
+            ? null
+            : email.Trim().ToUpperInvariant();
 
-        return await _db.User.FirstOrDefaultAsync(u =>
-            u.IsActive == isActive &&
-            (
-                (!string.IsNullOrWhiteSpace(normalizedUserName) && u.UserName.ToLower() == normalizedUserName) ||
-                (!string.IsNullOrWhiteSpace(normalizedEmail) && u.Email.ToLower() == normalizedEmail)
-            )
-        );
+        if (normalizedUserName is not null) {
+            return await _db.User.FirstOrDefaultAsync(u => u.NormalizedUserName == normalizedUserName && u.IsActive == isActive);
+        }
+
+        if (normalizedEmail is not null) {
+            return await _db.User.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail && u.IsActive == isActive);
+        }
+
+        return null;
     }
 
     public ICollection<User> SearchUsers(string search, bool isActive = true) {
         var normalizedSearch = search.Trim().ToLower();
 
         return _db.User
-            .Where(u => u.IsActive == isActive)
             .Where(u =>
-                u.Name.ToLower().Contains(normalizedSearch) ||
-                u.Email.ToLower().Contains(normalizedSearch)
+                u.IsActive == isActive && (
+                    (u.Name ?? string.Empty).ToLower().Contains(normalizedSearch) ||
+                    (u.Email ?? string.Empty).ToLower().Contains(normalizedSearch)
+                )
             )
             .OrderBy(u => u.Name)
             .ToList();
     }
 
-    public async Task<bool> UserExists(int userId, bool isActive = true) {
-        return await _db.User.AnyAsync(u => u.Id == userId && u.IsActive == isActive);
+    public async Task<bool> UserExists(string userId) {
+        return await _db.User.AnyAsync(u => u.Id == userId && u.IsActive);
     }
 
-    public async Task<bool> UserNameExists(string userName, bool isActive = true) {
-        return await _db.User.AnyAsync(u => u.UserName.ToLower() == userName.ToLower() && u.IsActive == isActive);
+    public async Task<bool> UserNameExists(string userName) {
+        var normalizedUserName = userName.Trim().ToLower();
+        return await _db.User.AnyAsync(u => u.IsActive && (u.UserName ?? string.Empty).ToLower() == normalizedUserName);
     }
 
-    public async Task<bool> EmailExists(string email, bool isActive = true) {
-        return await _db.User.AnyAsync(u => u.Email.ToLower() == email.ToLower() && u.IsActive == isActive);
+    public async Task<bool> EmailExists(string email) {
+        var normalizedEmail = email.Trim().ToLower();
+        return await _db.User.AnyAsync(u => u.IsActive && (u.Email ?? string.Empty).ToLower() == normalizedEmail);
     }
 
-    public async Task<bool> CreateUser(User user) {
-        await _db.User.AddAsync(user);
-        return await Save();
-    }
-
-    public async Task<bool> UpdateUser(int userId, User user) {
+    public async Task<bool> UpdateUser(string userId, User user) {
         if (!await UserExists(userId)) return false;
 
         var existingUser = await GetUser(userId);
@@ -77,23 +81,34 @@ public class UserRepository : IUserRepository
         existingUser.Name = user.Name;
         existingUser.UserName = user.UserName;
         existingUser.Email = user.Email;
-        if (!string.IsNullOrWhiteSpace(user.Password)) {
-            existingUser.Password = user.Password;
-        }
-        existingUser.Role = user.Role;
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         _db.User.Update(existingUser);
         return await Save();
     }
 
-    public async Task<bool> DisableUser(int userId) {
-        if (!await UserExists(userId)) return false;
-
+    public async Task<bool> ActivateUser(string userId) {
         var existingUser = await GetUser(userId);
-        if (existingUser == null) return false;
+        if (existingUser is null) throw new NotFoundException($"User with id {userId} was not found.");
+
+        existingUser.IsActive = true;
+        existingUser.LockoutEnabled = false;
+        existingUser.LockoutEnd = null;
+        existingUser.UpdatedAt = DateTime.UtcNow;
+
+        _db.User.Update(existingUser);
+        return await Save();
+    }
+
+    public async Task<bool> DisableUser(string userId) {
+        var existingUser = await GetUser(userId);
+        if (existingUser is null) throw new NotFoundException($"User with id {userId} was not found.");
 
         existingUser.IsActive = false;
+        existingUser.LockoutEnabled = true;
+        existingUser.LockoutEnd = DateTimeOffset.MaxValue;
+        existingUser.UpdatedAt = DateTime.UtcNow;
+
         _db.User.Update(existingUser);
         return await Save();
     }

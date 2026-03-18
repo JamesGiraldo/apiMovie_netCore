@@ -1,6 +1,9 @@
 using ApiMovies.Data;
 using ApiMovies.Common.Extensions;
 using ApiMovies.MoviesMappers;
+using Microsoft.AspNetCore.Identity;
+using ApiMovies.Models.Entities;
+
 
 // create a new builder
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +13,11 @@ builder.Host.UseApiSerilog();
 
 // add DbContext to the container with connection string from appsettings.json
 builder.Services.AddPostgresDatabase(builder.Configuration);
+
+// add identity to the container
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+
 
 // add repositories
 builder.Services.AddRepositories();

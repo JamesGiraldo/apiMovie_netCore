@@ -20,7 +20,7 @@ public class AuthService : IAuthService {
 
     public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto) {
         try {
-            await ValidateLoginUser(userLoginDto);
+            ValidateLoginUser(userLoginDto);
             var response = await _authRepository.LoginUser(userLoginDto);
 
             return response;
@@ -40,7 +40,7 @@ public class AuthService : IAuthService {
         }
     }
 
-    private async Task ValidateLoginUser(UserLoginDto userLoginDto) {
+    private static void ValidateLoginUser(UserLoginDto userLoginDto) {
         if (string.IsNullOrWhiteSpace(userLoginDto.UserName) && string.IsNullOrWhiteSpace(userLoginDto.Email)) {
             throw new BadRequestException("User name or email is required.");
         }

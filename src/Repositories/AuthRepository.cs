@@ -1,25 +1,35 @@
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Models.Dtos;
 using ApiMovies.Models.Entities;
-using Mapster;
-using BCrypt.Net;
 using ApiMovies.Common.Exceptions;
-using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
-
+using Microsoft.AspNetCore.Identity;
+using AutoMapper;
 namespace ApiMovies.Repositories;
 
 public class AuthRepository : IAuthRepository {
 
     private readonly IUserRepository _userRepository;
     private readonly IConfigurationSection _secretKey;
+    private readonly UserManager<User> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IMapper _mapper;
 
-    public AuthRepository(IUserRepository userRepository, IConfiguration config) {
+    public AuthRepository(
+        IUserRepository userRepository,
+        IConfiguration config,
+        UserManager<User> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IMapper mapper
+    ) {
         _userRepository = userRepository;
         _secretKey = config.GetSection("ApiSettings:SecretKey");
+        _userManager = userManager;
+        _roleManager = roleManager;
+        _mapper = mapper;
     }
 
     public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto) {
@@ -30,43 +40,57 @@ public class AuthRepository : IAuthRepository {
 
         if (user is null) throw new NotFoundException("User not found or invalid user name or email.");
 
-        var userInfoDto = user.Adapt<UserInfoDto>();
+        var isValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
+        if (!isValid) throw new NotFoundException("User not found or invalid user name or email or password.");
 
-        if (!VerifyPassword(userLoginDto.Password, user.Password)) {
-            throw new BadRequestException("Invalid password.");
-        }
+        var roles = await _userManager.GetRolesAsync(user);
+        var userInfo = _mapper.Map<UserInfoDto>(user);
 
-        var token = GenerateToken(userInfoDto);
-        return new UserResponseDto { Token = token, User = userInfoDto, Expiration = DateTime.UtcNow };
+        userInfo.Roles = roles.ToList();
+        var token = GenerateToken(userInfo);
+
+        return new UserResponseDto {
+            User = userInfo,
+            Expiration = DateTime.UtcNow.AddHours(24),
+            Token = token,
+        };
     }
 
     public async Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto) {
 
-        var passwordEncrypted = GetPasswordEncrypted(userCreateDto.Password);
-
-        var user = new User {
+        User user = new User() {
             Email = userCreateDto.Email,
-            IsActive = true,
+            LastName = userCreateDto.LastName,
             Name = userCreateDto.Name,
-            Password = passwordEncrypted,
-            Role = userCreateDto.Role,
             UserName = userCreateDto.UserName,
+            PhoneNumber = userCreateDto.PhoneNumber,
+            NormalizedEmail = userCreateDto.Email.ToUpper(),
+            NormalizedUserName = userCreateDto.UserName.ToUpper(),
         };
 
-        if (!await _userRepository.CreateUser(user)) return null!;
+        var result = await _userManager.CreateAsync(user, userCreateDto.Password);
+        if (!result.Succeeded) {
+            var errors = string.Join(" | ", result.Errors.Select(e => e.Description));
+            throw new BadRequestException(errors);
+        }
 
-        var userInfoDto = user.Adapt<UserInfoDto>();
+        if (!_roleManager.RoleExistsAsync("Admin").GetAwaiter().GetResult()) {
+            await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            await _roleManager.CreateAsync(new IdentityRole("Registered"));
+        }
 
-        var token = GenerateToken(userInfoDto);
-        return new UserResponseDto { Token = token, User = userInfoDto, Expiration = DateTime.UtcNow };
-    }
+        await _userManager.AddToRoleAsync(user, "Admin");
 
-    private string GetPasswordEncrypted(string password) {
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
+        var userInfo = _mapper.Map<UserInfoDto>(user);
+        var roles = await _userManager.GetRolesAsync(user);
+        userInfo.Roles = roles.ToList();
+        var token = GenerateToken(userInfo);
 
-    private bool VerifyPassword(string password, string hashedPassword) {
-        return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        return new UserResponseDto {
+            User = userInfo,
+            Expiration = DateTime.UtcNow.AddHours(24),
+            Token = token,
+        };
     }
 
     private string GenerateToken(UserInfoDto userInfoDto) {
@@ -90,7 +114,11 @@ public class AuthRepository : IAuthRepository {
     }
 
     private static Claim[] BuildClaims(UserInfoDto userInfoDto) {
-        return new[] { new Claim(ClaimTypes.Name, userInfoDto.UserName) };
+        return new[] {
+            new Claim(ClaimTypes.Name, userInfoDto.UserName),
+            new Claim(ClaimTypes.Email, userInfoDto.Email),
+            new Claim(ClaimTypes.Role, string.Join(",", userInfoDto.Roles))
+        };
     }
 
     private static SecurityTokenDescriptor BuildTokenDescriptor(

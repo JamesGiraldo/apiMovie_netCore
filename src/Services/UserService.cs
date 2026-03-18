@@ -4,7 +4,7 @@ using ApiMovies.Common.Exceptions;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 
 namespace ApiMovies.Services;
 
@@ -13,31 +13,32 @@ public class UserService : IUserService {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<UserService> _logger;
+    private readonly UserManager<User> _userManager;
 
     public UserService(
         IUserRepository userRepository,
         IMapper mapper,
-        ILogger<UserService> logger
+        ILogger<UserService> logger,
+        UserManager<User> userManager
     ) {
         _userRepository = userRepository;
         _mapper = mapper;
         _logger = logger;
+        _userManager = userManager;
     }
 
-    public ICollection<UserDto> GetUsers(bool isActive = true, string? search = null) {
+    public async Task<ICollection<UserDto>> GetUsers(string? search = null) {
         try {
             var users = string.IsNullOrWhiteSpace(search)
-                ? _userRepository.GetUsers(isActive)
-                : SearchUsers(search, isActive);
+                ? _userRepository.GetUsers(isActive: true)
+                : SearchUsers(search);
             if (users.Count == 0) {
                 var detail = !string.IsNullOrWhiteSpace(search)
                     ? "No users were found with the provided search term."
-                    : isActive
-                        ? "No active users were found."
-                        : "No users were found.";
+                    : "No users were found.";
                 throw new NotFoundException(detail);
             }
-            var usersResponse = _mapper.Map<ICollection<UserDto>>(users);
+            var usersResponse = await Task.WhenAll(users.Select(MapUserWithRolesAsync));
 
             return usersResponse;
         } catch (AppException) {
@@ -55,12 +56,12 @@ public class UserService : IUserService {
         return _userRepository.SearchUsers(search, isActive);
     }
 
-    public async Task<UserDto> GetUser(int userId, bool isActive = true) {
+    public async Task<UserDto> GetUser(string userId) {
         try {
-            var user = await _userRepository.GetUser(userId, isActive);
+            var user = await _userRepository.GetUser(userId);
             if (user == null) throw new NotFoundException("User not found.");
 
-            var userResponse = _mapper.Map<UserDto>(user);
+            var userResponse = await MapUserWithRolesAsync(user);
 
             return userResponse;
         } catch (AppException) {
@@ -74,7 +75,7 @@ public class UserService : IUserService {
         }
     }
 
-    public async Task<UserDto> UpdateUser(int userId, UserDto userDto) {
+    public async Task<UserDto> UpdateUser(string userId, UserDto userDto) {
         await ValidateUpdateRequest(userId, userDto);
         try {
             var userToUpdate = _mapper.Map<User>(userDto);
@@ -84,7 +85,7 @@ public class UserService : IUserService {
             var updatedUser = await _userRepository.GetUser(userId);
             if (updatedUser == null) throw new NotFoundException("User not found.");
 
-            var userResponse = _mapper.Map<UserDto>(updatedUser);
+            var userResponse = await MapUserWithRolesAsync(updatedUser);
 
             return userResponse;
         } catch (AppException) {
@@ -98,14 +99,35 @@ public class UserService : IUserService {
         }
     }
 
-    public async Task<UserDto> DeleteUser(int userId) {
+    public async Task<UserDto> ActivateUser(string userId) {
+        try {
+            var existingUser = await ValidateDeleteRequest(userId);
+
+            var isActivated = await _userRepository.ActivateUser(userId);
+            if (!isActivated) throw new NotFoundException("User not found.");
+
+            var userResponse = await MapUserWithRolesAsync(existingUser);
+
+            return userResponse;
+        } catch (AppException) {
+            throw;
+        } catch (Exception ex) {
+            _logger.LogError(ex, "Error activating user");
+            throw new InfrastructureException(
+                "An unexpected error occurred while activating user.",
+                ex
+            );
+        }
+    }
+
+    public async Task<UserDto> DeleteUser(string userId) {
         try {
             var existingUser = await ValidateDeleteRequest(userId);
 
             var isDisabled = await _userRepository.DisableUser(userId);
             if (!isDisabled) throw new NotFoundException("User not found.");
 
-            var userResponse = _mapper.Map<UserDto>(existingUser);
+            var userResponse = await MapUserWithRolesAsync(existingUser);
 
             return userResponse;
         } catch (AppException) {
@@ -119,21 +141,22 @@ public class UserService : IUserService {
         }
     }
 
-    private async Task ValidateUpdateRequest(int userId, UserDto userDto) {
+    private async Task ValidateUpdateRequest(string userId, UserDto userDto) {
         ValidateId(userId, "userId");
+        var validatedUserId = userId;
 
         if (userDto is null) throw new BadRequestException("User payload is required.");
-        if (userDto.Id <= 0) throw new BadRequestException("User payload id must be greater than 0.");
-        if (userDto.Id != userId) {
-            throw new BadRequestException($"The userId in route ({userId}) does not match payload id ({userDto.Id}).");
+        if (string.IsNullOrEmpty(userDto.Id)) throw new BadRequestException("User payload id is required.");
+        if (userDto.Id != validatedUserId) {
+            throw new BadRequestException($"The userId in route ({validatedUserId}) does not match payload id ({userDto.Id}).");
         }
 
-        if (await _userRepository.UserExists(userId, false)) {
+        if (!await _userRepository.UserExists(validatedUserId)) {
             throw new ConflictException("User is inactive and cannot be updated.");
         }
 
-        var currentUser = await _userRepository.GetUser(userId);
-        if (currentUser is null) throw new NotFoundException($"User with id {userId} was not found.");
+        var currentUser = await _userRepository.GetUser(validatedUserId);
+        if (currentUser is null) throw new NotFoundException($"User with id {validatedUserId} was not found.");
 
         var isDuplicatedEmail = await _userRepository.EmailExists(userDto.Email)
             && !string.Equals(currentUser.Email, userDto.Email, StringComparison.OrdinalIgnoreCase);
@@ -145,24 +168,25 @@ public class UserService : IUserService {
         if (isDuplicatedUserName) throw new ConflictException($"The user name '{userDto.UserName}' is already in our records. Please use a different user name.");
     }
 
-    private async Task<User> ValidateDeleteRequest(int userId) {
+    private async Task<User> ValidateDeleteRequest(string userId) {
         ValidateId(userId, "userId");
 
-        if (await _userRepository.UserExists(userId, false)) {
-            throw new ConflictException("User is already inactive and cannot be deleted again.");
-        }
-
         var existingUser = await _userRepository.GetUser(userId);
-        if (existingUser is null) {
-            throw new NotFoundException($"User with id {userId} was not found.");
-        }
+        if (existingUser is null) throw new NotFoundException($"User with id {userId} was not found.");
 
         return existingUser;
     }
 
-    private static void ValidateId(int id, string paramName) {
-        if (id <= 0) {
-            throw new BadRequestException($"{paramName} must be greater than 0.");
+    private async Task<UserDto> MapUserWithRolesAsync(User user) {
+        var userResponse = _mapper.Map<UserDto>(user);
+        var roles = await _userManager.GetRolesAsync(user);
+        userResponse.Roles = roles.ToArray();
+        return userResponse;
+    }
+
+    private static void ValidateId(string id, string paramName) {
+        if (string.IsNullOrEmpty(id)) {
+            throw new BadRequestException($"{paramName} is required.");
         }
     }
 }
