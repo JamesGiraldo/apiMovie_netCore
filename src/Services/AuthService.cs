@@ -55,7 +55,7 @@ public class AuthService : IAuthService {
 
     public async Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto) {
         try {
-            await ValidateRegisterUser(userCreateDto);
+            await ValidateRegisterUserAsync(userCreateDto);
             var user = await _authRepository.RegisterUser(userCreateDto);
             await _authRepository.EnsureDefaultRoles();
             await _authRepository.AddUserToRole(user, "Admin");
@@ -92,18 +92,18 @@ public class AuthService : IAuthService {
         }
     }
 
-    private async Task ValidateUserName(string userName) {
+    private async Task ValidateUserNameAsync(string userName) {
         if (await _userRepository.UserNameExists(userName)) {
             throw new ConflictException("User name already exists.");
         }
     }
 
-    private async Task ValidateRegisterUser(UserCreateDto userCreateDto) {
-        await ValidateEmail(userCreateDto.Email);
-        await ValidateUserName(userCreateDto.UserName);
+    private async Task ValidateRegisterUserAsync(UserCreateDto userCreateDto) {
+        await ValidateEmailAsync(userCreateDto.Email);
+        await ValidateUserNameAsync(userCreateDto.UserName);
     }
 
-    private async Task ValidateEmail(string email) {
+    private async Task ValidateEmailAsync(string email) {
         if (await _userRepository.EmailExists(email)) {
             throw new ConflictException("Email already exists.");
         }

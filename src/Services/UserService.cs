@@ -65,7 +65,7 @@ public class UserService : IUserService {
     public async Task<UserDto> GetUser(string userId) {
         try {
             var user = await _userRepository.GetUser(userId);
-            if (user == null) throw new NotFoundException("User not found.");
+            if (user == null) throw new NotFoundException($"User with id {userId} was not found.");
 
             var userResponse = await MapUserWithRolesAsync(user);
 
@@ -82,10 +82,10 @@ public class UserService : IUserService {
     }
 
     public async Task<UserDto> UpdateUser(string userId, UserUpdateDto userDto) {
-        await ValidateUpdateRequest(userId, userDto);
+        await ValidateUpdateRequestAsync(userId, userDto);
         try {
             var currentUser = await _userRepository.GetUser(userId);
-            if (currentUser is null) throw new NotFoundException("User not found.");
+            if (currentUser is null) throw new NotFoundException($"User with id {userId} was not found.");
 
             var previousImageUrl = currentUser.Image;
             FileUploadResultDto? uploadResult = null;
@@ -103,7 +103,7 @@ public class UserService : IUserService {
             var isUpdated = await _userRepository.UpdateUser(userId, userToUpdate);
             if (!isUpdated) {
                 await SafeDeleteAsync(uploadResult?.Url);
-                throw new NotFoundException("User not found.");
+                throw new NotFoundException($"User with id {userId} was not found.");
             }
 
             if (!string.IsNullOrWhiteSpace(uploadResult?.Url)) {
@@ -111,7 +111,7 @@ public class UserService : IUserService {
             }
 
             var updatedUser = await _userRepository.GetUser(userId);
-            if (updatedUser == null) throw new NotFoundException("User not found.");
+            if (updatedUser == null) throw new NotFoundException($"User with id {userId} was not found.");
 
             var userResponse = await MapUserWithRolesAsync(updatedUser);
 
@@ -129,10 +129,10 @@ public class UserService : IUserService {
 
     public async Task<UserDto> ActivateUser(string userId) {
         try {
-            var existingUser = await ValidateDeleteRequest(userId);
+            var existingUser = await ValidateUserExistsRequestAsync(userId);
 
             var isActivated = await _userRepository.ActivateUser(userId);
-            if (!isActivated) throw new NotFoundException("User not found.");
+            if (!isActivated) throw new NotFoundException($"User with id {userId} was not found.");
 
             var userResponse = await MapUserWithRolesAsync(existingUser);
 
@@ -150,10 +150,10 @@ public class UserService : IUserService {
 
     public async Task<UserDto> DeleteUser(string userId) {
         try {
-            var existingUser = await ValidateDeleteRequest(userId);
+            var existingUser = await ValidateUserExistsRequestAsync(userId);
 
             var isDisabled = await _userRepository.DisableUser(userId);
-            if (!isDisabled) throw new NotFoundException("User not found.");
+            if (!isDisabled) throw new NotFoundException($"User with id {userId} was not found.");
 
             var userResponse = await MapUserWithRolesAsync(existingUser);
 
@@ -169,7 +169,7 @@ public class UserService : IUserService {
         }
     }
 
-    private async Task ValidateUpdateRequest(string userId, UserUpdateDto userDto) {
+    private async Task ValidateUpdateRequestAsync(string userId, UserUpdateDto userDto) {
         ValidateId(userId, "userId");
         var validatedUserId = userId;
 
@@ -196,7 +196,7 @@ public class UserService : IUserService {
         if (isDuplicatedUserName) throw new ConflictException($"The user name '{userDto.UserName}' is already in our records. Please use a different user name.");
     }
 
-    private async Task<User> ValidateDeleteRequest(string userId) {
+    private async Task<User> ValidateUserExistsRequestAsync(string userId) {
         ValidateId(userId, "userId");
 
         var existingUser = await _userRepository.GetUser(userId);
