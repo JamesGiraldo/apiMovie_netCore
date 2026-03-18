@@ -26,11 +26,11 @@ public class MovieService : IMovieService
         _fileStorageService = fileStorageService;
     }
 
-    public IEnumerable<MovieDto> GetMovies(string? search = null) {
+    public async Task<IEnumerable<MovieDto>> GetMovies(string? search = null) {
         try {
             var movies = string.IsNullOrWhiteSpace(search)
-                ? _mRepo.GetMovies()
-                : _mRepo.SearchMovies(search.Trim()).ToList();
+                ? await _mRepo.GetMovies()
+                : await _mRepo.SearchMovies(search.Trim());
 
             if (movies.Count == 0) {
                 var detail = string.IsNullOrWhiteSpace(search)
@@ -51,10 +51,10 @@ public class MovieService : IMovieService
         }
     }
 
-    public IEnumerable<MovieDto> GetMoviesByCategory(int categoryId, string? search = null) {
+    public async Task<IEnumerable<MovieDto>> GetMoviesByCategory(int categoryId, string? search = null) {
         ValidateId(categoryId, "categoryId");
         try {
-            var movies = _mRepo.GetMoviesByCategory(categoryId, search);
+            var movies = await _mRepo.GetMoviesByCategory(categoryId, search);
             if (movies.Count == 0) {
                 var detail = string.IsNullOrWhiteSpace(search)
                     ? $"No movies were found for category id {categoryId}."
@@ -74,10 +74,10 @@ public class MovieService : IMovieService
         }
     }
 
-    public MovieDto GetMovie(int movieId) {
+    public async Task<MovieDto> GetMovie(int movieId) {
         ValidateId(movieId, "movieId");
         try {
-            var movie = _mRepo.GetMovie(movieId);
+            var movie = await _mRepo.GetMovie(movieId);
             if (movie is null) {
                 throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
@@ -94,27 +94,27 @@ public class MovieService : IMovieService
         }
     }
 
-    public MovieDto CreateMovie(MovieCreateDto movieDto) {
-        ValidateCreateRequest(movieDto);
+    public async Task<MovieDto> CreateMovie(MovieCreateDto movieDto) {
+        await ValidateCreateRequest(movieDto);
         try {
             var movie = MapCreateDtoToMovie(movieDto);
-            var created = _mRepo.CreateMovie(movie);
+            var created = await _mRepo.CreateMovie(movie);
             if (!created) {
                 throw new InfrastructureException("Could not persist movie changes.");
             }
 
             if (movieDto.Image is not null) {
-                var uploadResult = _fileStorageService.UploadImageAsync(
+                var uploadResult = await _fileStorageService.UploadImageAsync(
                     movieDto.Image,
                     "movies",
                     movie.Name.ToLower().Replace(" ", "-")
-                ).GetAwaiter().GetResult();
+                );
 
                 movie.FilePath = uploadResult.Url;
-                var imageSaved = _mRepo.UpdateMovie(movie);
+                var imageSaved = await _mRepo.UpdateMovie(movie);
                 if (!imageSaved) {
-                    SafeDeleteAsync(uploadResult.Url).GetAwaiter().GetResult();
-                    _mRepo.DeleteMovie(movie.Id);
+                    await SafeDeleteAsync(uploadResult.Url);
+                    await _mRepo.DeleteMovie(movie.Id);
                     throw new InfrastructureException("Could not persist movie image changes.");
                 }
             }
@@ -132,9 +132,9 @@ public class MovieService : IMovieService
     }
 
     public async Task<MovieDto> UpdateMovie(int movieId, MovieUpdateDto movieDto) {
-        ValidateUpdateRequest(movieId, movieDto);
+        await ValidateUpdateRequest(movieId, movieDto);
         try {
-            var currentMovie = _mRepo.GetMovie(movieId);
+            var currentMovie = await _mRepo.GetMovie(movieId);
             if (currentMovie is null) {
                 throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
@@ -157,7 +157,7 @@ public class MovieService : IMovieService
                 movie.FilePath = uploadResult.Url;
             }
 
-            var updated = _mRepo.UpdateMovie(movie);
+            var updated = await _mRepo.UpdateMovie(movie);
             if (!updated) {
                 await SafeDeleteAsync(uploadResult?.Url);
                 throw new InfrastructureException("Could not persist movie changes.");
@@ -183,20 +183,20 @@ public class MovieService : IMovieService
         return await UpdateMovie(movieId, movieDto);
     }
 
-    public MovieDto DeleteMovie(int movieId) {
+    public async Task<MovieDto> DeleteMovie(int movieId) {
         ValidateId(movieId, "movieId");
         try {
-            var movieToDelete = _mRepo.GetMovie(movieId);
+            var movieToDelete = await _mRepo.GetMovie(movieId);
             if (movieToDelete is null) {
                 throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
 
-            var deleted = _mRepo.DeleteMovie(movieId);
+            var deleted = await _mRepo.DeleteMovie(movieId);
             if (!deleted) {
                 throw new InfrastructureException("Could not persist movie deletion.");
             }
 
-            SafeDeleteAsync(movieToDelete.FilePath).GetAwaiter().GetResult();
+            await SafeDeleteAsync(movieToDelete.FilePath);
 
             return ToMovieDtoWithUrls(movieToDelete);
         } catch (AppException) {
@@ -214,7 +214,7 @@ public class MovieService : IMovieService
      * Methods private to validate the create request
     */
 
-    private void ValidateCreateRequest(MovieCreateDto movieDto) {
+    private async Task ValidateCreateRequest(MovieCreateDto movieDto) {
         if (movieDto is null) {
             throw new BadRequestException("Movie payload is required.");
         }
@@ -225,14 +225,14 @@ public class MovieService : IMovieService
             throw new BadRequestException("Movie name is required.");
         }
 
-        if (_mRepo.ExistsMovieName(movieName)) {
+        if (await _mRepo.ExistsMovieName(movieName)) {
             throw new ConflictException(
                 $"The name '{movieDto.Name}' is already in our records. Please use a different movie name."
             );
         }
     }
 
-    private void ValidateUpdateRequest(int movieId, MovieUpdateDto movieDto) {
+    private async Task ValidateUpdateRequest(int movieId, MovieUpdateDto movieDto) {
         ValidateId(movieId, "movieId");
 
         if (movieDto is null) {
@@ -251,12 +251,12 @@ public class MovieService : IMovieService
             throw new BadRequestException("Movie name is required.");
         }
 
-        var currentMovie = _mRepo.GetMovie(movieId);
+        var currentMovie = await _mRepo.GetMovie(movieId);
         if (currentMovie is null) {
             throw new NotFoundException($"Movie with id {movieId} was not found.");
         }
 
-        var isDuplicatedName = _mRepo.ExistsMovieName(movieName)
+        var isDuplicatedName = await _mRepo.ExistsMovieName(movieName)
             && !string.Equals(currentMovie.Name, movieName, StringComparison.OrdinalIgnoreCase);
 
         if (isDuplicatedName) {

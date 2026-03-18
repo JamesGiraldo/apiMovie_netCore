@@ -4,19 +4,17 @@ namespace ApiMovies.Interfaces.Repositories;
 
 public interface ICategoryRepository
 {
-    ICollection<Category> GetCategories(string? search = null);
+    Task<ICollection<Category>> GetCategories(string? search = null);
 
-    Category? GetCategory(int CategoryId);
+    Task<Category?> GetCategory(int CategoryId);
 
-    bool CategoryExists(int categoryId);
+    Task<bool> CategoryExists(int categoryId);
 
-    bool ExistsCategoryName(string name);
+    Task<bool> ExistsCategoryName(string name);
 
-    bool CreateCategory(Category category);
+    Task<bool> CreateCategory(Category category);
 
-    bool UpdateCategory(Category category);
+    Task<bool> UpdateCategory(Category category);
 
-    bool DeleteCategory(int CategoryId);
-
-    bool Save();
+    Task<bool> DeleteCategory(int CategoryId);
 }

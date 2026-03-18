@@ -20,8 +20,8 @@ public class MovieController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetMovies([FromQuery] string? search) {
-        var movies = _mService.GetMovies(search);
+    public async Task<IActionResult> GetMovies([FromQuery] string? search) {
+        var movies = await _mService.GetMovies(search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Movies retrieved successfully."
@@ -37,8 +37,8 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult GetMovie(int movieId) {
-        var movie = _mService.GetMovie(movieId);
+    public async Task<IActionResult> GetMovie(int movieId) {
+        var movie = await _mService.GetMovie(movieId);
         return this.ApiSuccess(
             title: "Movie retrieved successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -52,8 +52,8 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult GetMoviesByCategory(int categoryId, [FromQuery] string? search) {
-        var movies = _mService.GetMoviesByCategory(categoryId, search);
+    public async Task<IActionResult> GetMoviesByCategory(int categoryId, [FromQuery] string? search) {
+        var movies = await _mService.GetMoviesByCategory(categoryId, search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Movies by category retrieved successfully."
@@ -71,8 +71,8 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult CreateMovie([FromForm] MovieCreateDto movieDto) {
-        var movie = _mService.CreateMovie(movieDto);
+    public async Task<IActionResult> CreateMovie([FromForm] MovieCreateDto movieDto) {
+        var movie = await _mService.CreateMovie(movieDto);
         return this.ApiSuccess(
             title: "Movie created successfully.",
             statusCode: StatusCodes.Status201Created,
@@ -123,8 +123,8 @@ public class MovieController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult DeleteMovie(int movieId) {
-        var movie = _mService.DeleteMovie(movieId);
+    public async Task<IActionResult> DeleteMovie(int movieId) {
+        var movie = await _mService.DeleteMovie(movieId);
         return this.ApiSuccess(
             title: "Movie deleted successfully.",
             statusCode: StatusCodes.Status200OK,

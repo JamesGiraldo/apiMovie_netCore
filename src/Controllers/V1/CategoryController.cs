@@ -21,8 +21,8 @@ public class CategoryController : ControllerBase
     [ResponseCache(CacheProfileName = "30Seconds")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetCategories([FromQuery] string? search) {
-        var categories = _ctService.GetCategories(search);
+    public async Task<IActionResult> GetCategories([FromQuery] string? search) {
+        var categories = await _ctService.GetCategories(search);
         return this.ApiSuccess(
             title: string.IsNullOrWhiteSpace(search)
                 ? "Categories retrieved successfully."
@@ -38,8 +38,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public IActionResult GetCategory(int categoryId) {
-        var category = _ctService.GetCategory(categoryId);
+    public async Task<IActionResult> GetCategory(int categoryId) {
+        var category = await _ctService.GetCategory(categoryId);
         return this.ApiSuccess(
             title: "Category retrieved successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -54,8 +54,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult CreateCategory([FromBody] CategoryCreateDto categoryCreateDto) {
-        var category = _ctService.CreateCategory(categoryCreateDto);
+    public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryCreateDto) {
+        var category = await _ctService.CreateCategory(categoryCreateDto);
         return this.ApiSuccess(
             title: "Category created successfully.",
             statusCode: StatusCodes.Status201Created,
@@ -70,8 +70,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult UpdateCategory(int categoryId, [FromBody] CategoryDto dto) {
-        var category = _ctService.UpdateCategory(categoryId, dto);
+    public async Task<IActionResult> UpdateCategory(int categoryId, [FromBody] CategoryDto dto) {
+        var category = await _ctService.UpdateCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category updated successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -86,8 +86,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult ReplaceCategory(int categoryId, [FromBody] CategoryDto dto) {
-        var category = _ctService.ReplaceCategory(categoryId, dto);
+    public async Task<IActionResult> ReplaceCategory(int categoryId, [FromBody] CategoryDto dto) {
+        var category = await _ctService.ReplaceCategory(categoryId, dto);
         return this.ApiSuccess(
             title: "Category replaced successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -102,8 +102,8 @@ public class CategoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult DeleteCategory(int categoryId) {
-        var category = _ctService.DeleteCategory(categoryId);
+    public async Task<IActionResult> DeleteCategory(int categoryId) {
+        var category = await _ctService.DeleteCategory(categoryId);
         return this.ApiSuccess(
             title: "Category deleted successfully.",
             statusCode: StatusCodes.Status200OK,

@@ -13,62 +13,62 @@ public class MovieRepository : IMovieRepository
         _db = context;
     }
 
-    public ICollection<Movie> GetMovies() {
-        return _db.Movie.OrderBy(m => m.Name).Include(c => c.Category)
-        .ToList();
+    public async Task<ICollection<Movie>> GetMovies() {
+        return await _db.Movie
+            .OrderBy(m => m.Name)
+            .Include(c => c.Category)
+            .ToListAsync();
     }
 
-    public ICollection<Movie> GetMoviesByCategory(int categoryId, string? search = null) {
+    public async Task<ICollection<Movie>> GetMoviesByCategory(int categoryId, string? search = null) {
         IQueryable<Movie> query = _db.Movie
             .Include(c => c.Category)
             .Where(m => m.CategoryId == categoryId);
 
         query = ApplySearchFilter(query, search);
 
-        return query.ToList();
+        return await query.ToListAsync();
     }
 
-    public IEnumerable<Movie> SearchMovies(string name) {
+    public async Task<ICollection<Movie>> SearchMovies(string name) {
         IQueryable<Movie> query = _db.Movie;
         query = ApplySearchFilter(query, name);
 
-        return query.ToList();
+        return await query.ToListAsync();
     }
 
-    public Movie? GetMovie(int movieId) {
-        return _db.Movie.AsNoTracking().Where(m => m.Id == movieId).FirstOrDefault();
+    public async Task<Movie?> GetMovie(int movieId) {
+        return await _db.Movie
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == movieId);
     }
 
-    public bool MovieExists(int movieId) {
-        return _db.Movie.Any(m => m.Id == movieId);
+    public async Task<bool> MovieExists(int movieId) {
+        return await _db.Movie.AnyAsync(m => m.Id == movieId);
     }
 
-    public bool ExistsMovieName(string name) {
-        return _db.Movie.Any(m => m.Name.Trim().ToLower() == name.Trim().ToLower());
+    public async Task<bool> ExistsMovieName(string name) {
+        return await _db.Movie.AnyAsync(m => m.Name.Trim().ToLower() == name.Trim().ToLower());
     }
 
-    public bool CreateMovie(Movie movie) {
+    public async Task<bool> CreateMovie(Movie movie) {
         _db.Add(movie);
-        return Save();
+        return await _db.SaveChangesAsync() > 0;
     }
 
-    public bool UpdateMovie(Movie movie) {
+    public async Task<bool> UpdateMovie(Movie movie) {
         _db.Update(movie);
-        return Save();
+        return await _db.SaveChangesAsync() > 0;
     }
 
-    public bool DeleteMovie(int movieId) {
-        var movie = GetMovie(movieId);
+    public async Task<bool> DeleteMovie(int movieId) {
+        var movie = await GetMovie(movieId);
         if (movie is null) {
             return false;
         }
 
         _db.Remove(movie);
-        return Save();
-    }
-
-    public bool Save() {
-        return _db.SaveChanges() > 0;
+        return await _db.SaveChangesAsync() > 0;
     }
 
     private static IQueryable<Movie> ApplySearchFilter(IQueryable<Movie> query, string? search) {

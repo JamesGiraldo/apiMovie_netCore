@@ -4,23 +4,21 @@ namespace ApiMovies.Interfaces.Repositories;
 
 public interface IMovieRepository
 {
-    ICollection<Movie> GetMovies();
+    Task<ICollection<Movie>> GetMovies();
 
-    ICollection<Movie> GetMoviesByCategory(int categoryId, string? search = null);
+    Task<ICollection<Movie>> GetMoviesByCategory(int categoryId, string? search = null);
 
-    IEnumerable<Movie> SearchMovies(string name);
+    Task<ICollection<Movie>> SearchMovies(string name);
 
-    Movie? GetMovie(int movieId);
+    Task<Movie?> GetMovie(int movieId);
 
-    bool MovieExists(int movieId);
+    Task<bool> MovieExists(int movieId);
 
-    bool ExistsMovieName(string name);
+    Task<bool> ExistsMovieName(string name);
 
-    bool CreateMovie(Movie movie);
+    Task<bool> CreateMovie(Movie movie);
 
-    bool UpdateMovie(Movie movie);
+    Task<bool> UpdateMovie(Movie movie);
 
-    bool DeleteMovie(int movieId);
-
-    bool Save();
+    Task<bool> DeleteMovie(int movieId);
 }

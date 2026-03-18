@@ -24,9 +24,9 @@ public class CategoryService : ICategoryService
         _logger = logger;
     }
 
-    public IEnumerable<CategoryDto> GetCategories(string? search = null) {
+    public async Task<IEnumerable<CategoryDto>> GetCategories(string? search = null) {
         try {
-            var categories = _ctRepo.GetCategories(search);
+            var categories = await _ctRepo.GetCategories(search);
             var hasSearch = !string.IsNullOrWhiteSpace(search);
 
             if (!hasSearch && categories.Count == 0) {
@@ -47,10 +47,10 @@ public class CategoryService : ICategoryService
         }
     }
 
-    public CategoryDto GetCategory(int categoryId) {
+    public async Task<CategoryDto> GetCategory(int categoryId) {
         ValidateId(categoryId);
         try {
-            var category = _ctRepo.GetCategory(categoryId);
+            var category = await _ctRepo.GetCategory(categoryId);
             if (category is null) {
                 throw new NotFoundException($"Category with id {categoryId} was not found.");
             }
@@ -67,11 +67,11 @@ public class CategoryService : ICategoryService
         }
     }
 
-    public CategoryDto CreateCategory(CategoryCreateDto categoryDto) {
-        ValidateCreateRequest(categoryDto);
+    public async Task<CategoryDto> CreateCategory(CategoryCreateDto categoryDto) {
+        await ValidateCreateRequest(categoryDto);
         try {
             var category = MapCreateDtoToCategory(categoryDto);
-            var created = _ctRepo.CreateCategory(category);
+            var created = await _ctRepo.CreateCategory(category);
             if (!created) {
                 throw new InfrastructureException("Could not persist category changes.");
             }
@@ -88,11 +88,11 @@ public class CategoryService : ICategoryService
         }
     }
 
-    public CategoryDto UpdateCategory(int categoryId, CategoryDto categoryDto) {
-        ValidateUpdateRequest(categoryId, categoryDto);
+    public async Task<CategoryDto> UpdateCategory(int categoryId, CategoryDto categoryDto) {
+        await ValidateUpdateRequest(categoryId, categoryDto);
         try {
             var category = MapUpdateDtoToCategory(categoryId, categoryDto);
-            var updated = _ctRepo.UpdateCategory(category);
+            var updated = await _ctRepo.UpdateCategory(category);
             if (!updated) {
                 throw new InfrastructureException("Could not persist category changes.");
             }
@@ -109,19 +109,19 @@ public class CategoryService : ICategoryService
         }
     }
 
-    public CategoryDto ReplaceCategory(int categoryId, CategoryDto categoryDto) {
-        return UpdateCategory(categoryId, categoryDto);
+    public async Task<CategoryDto> ReplaceCategory(int categoryId, CategoryDto categoryDto) {
+        return await UpdateCategory(categoryId, categoryDto);
     }
 
-    public CategoryDto DeleteCategory(int categoryId) {
+    public async Task<CategoryDto> DeleteCategory(int categoryId) {
         ValidateId(categoryId);
         try {
-            var categoryToDelete = _ctRepo.GetCategory(categoryId);
+            var categoryToDelete = await _ctRepo.GetCategory(categoryId);
             if (categoryToDelete is null) {
                 throw new NotFoundException($"Category with id {categoryId} was not found.");
             }
 
-            var deleted = _ctRepo.DeleteCategory(categoryId);
+            var deleted = await _ctRepo.DeleteCategory(categoryId);
             if (!deleted) {
                 throw new InfrastructureException("Could not persist category deletion.");
             }
@@ -138,7 +138,7 @@ public class CategoryService : ICategoryService
         }
     }
 
-    private void ValidateCreateRequest(CategoryCreateDto categoryDto) {
+    private async Task ValidateCreateRequest(CategoryCreateDto categoryDto) {
         if (categoryDto is null) {
             throw new BadRequestException("Category payload is required.");
         }
@@ -148,14 +148,14 @@ public class CategoryService : ICategoryService
             throw new BadRequestException("Category name is required.");
         }
 
-        if (_ctRepo.ExistsCategoryName(categoryName)) {
+        if (await _ctRepo.ExistsCategoryName(categoryName)) {
             throw new ConflictException(
                 $"The name '{categoryDto.Name}' is already in our records. Please use a different category name."
             );
         }
     }
 
-    private void ValidateUpdateRequest(int categoryId, CategoryDto categoryDto) {
+    private async Task ValidateUpdateRequest(int categoryId, CategoryDto categoryDto) {
         ValidateId(categoryId);
 
         if (categoryDto is null) {
@@ -173,12 +173,12 @@ public class CategoryService : ICategoryService
             throw new BadRequestException("Category name is required.");
         }
 
-        var currentCategory = _ctRepo.GetCategory(categoryId);
+        var currentCategory = await _ctRepo.GetCategory(categoryId);
         if (currentCategory is null) {
             throw new NotFoundException($"Category with id {categoryId} was not found.");
         }
 
-        var isDuplicatedName = _ctRepo.ExistsCategoryName(categoryName)
+        var isDuplicatedName = await _ctRepo.ExistsCategoryName(categoryName)
             && !string.Equals(currentCategory.Name, categoryName, StringComparison.OrdinalIgnoreCase);
         if (isDuplicatedName) {
             throw new ConflictException(
