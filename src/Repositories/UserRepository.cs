@@ -2,7 +2,6 @@ using ApiMovies.Models.Entities;
 using ApiMovies.Interfaces.Repositories;
 using ApiMovies.Data;
 using Microsoft.EntityFrameworkCore;
-using ApiMovies.Common.Exceptions;
 
 namespace ApiMovies.Repositories;
 
@@ -73,8 +72,6 @@ public class UserRepository : IUserRepository
     }
 
     public async Task<bool> UpdateUser(string userId, User user) {
-        if (!await UserExists(userId)) return false;
-
         var existingUser = await GetUser(userId);
         if (existingUser == null) return false;
 
@@ -89,12 +86,12 @@ public class UserRepository : IUserRepository
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         _db.User.Update(existingUser);
-        return await Save();
+        return await _db.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> ActivateUser(string userId) {
         var existingUser = await GetUser(userId);
-        if (existingUser is null) throw new NotFoundException($"User with id {userId} was not found.");
+        if (existingUser is null) return false;
 
         existingUser.IsActive = true;
         existingUser.LockoutEnabled = false;
@@ -102,12 +99,12 @@ public class UserRepository : IUserRepository
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         _db.User.Update(existingUser);
-        return await Save();
+        return await _db.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> DisableUser(string userId) {
         var existingUser = await GetUser(userId);
-        if (existingUser is null) throw new NotFoundException($"User with id {userId} was not found.");
+        if (existingUser is null) return false;
 
         existingUser.IsActive = false;
         existingUser.LockoutEnabled = true;
@@ -115,10 +112,6 @@ public class UserRepository : IUserRepository
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         _db.User.Update(existingUser);
-        return await Save();
-    }
-
-    public async Task<bool> Save() {
         return await _db.SaveChangesAsync() > 0;
     }
 

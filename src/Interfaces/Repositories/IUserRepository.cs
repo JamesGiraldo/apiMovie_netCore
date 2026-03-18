@@ -23,6 +23,4 @@ public interface IUserRepository
     Task<bool> ActivateUser(string userId);
 
     Task<bool> DisableUser(string userId);
-
-    Task<bool> Save();
 }

@@ -151,13 +151,9 @@ public class UserService : IUserService {
     public async Task<UserDto> DeleteUser(string userId) {
         try {
             var existingUser = await ValidateDeleteRequest(userId);
-            var previousImageUrl = existingUser.Image;
 
             var isDisabled = await _userRepository.DisableUser(userId);
             if (!isDisabled) throw new NotFoundException("User not found.");
-
-            existingUser.UpdatedAt = DateTime.UtcNow;
-            await _userRepository.Save();
 
             var userResponse = await MapUserWithRolesAsync(existingUser);
 
