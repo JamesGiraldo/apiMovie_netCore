@@ -16,4 +16,8 @@ Accept: application/json
 GET {{apiMovies_HostAddress}}/api/v1/user
 Accept: application/json
 
+### Get all Roles
+GET {{apiMovies_HostAddress}}/api/v1/role
+Accept: application/json
+
 ###
