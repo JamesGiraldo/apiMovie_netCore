@@ -3,8 +3,10 @@ using ApiMovies.Models.Enums;
 
 namespace ApiMovies.Models.Dtos;
 
-public class MovieCreateDto
+public class MovieUpdateDto
 {
+    public int Id { get; set; }
+
     [Required(ErrorMessage = "The name is required")]
     [MaxLength(100, ErrorMessage = "The name must be less than 100 characters")]
     public string Name { get; set; } = string.Empty;
@@ -15,7 +17,7 @@ public class MovieCreateDto
 
     public TypeClassification TypeClassification { get; set; }
 
-    public string? FilePath { get; set; } = null;
+    public string FilePath { get; set; } = string.Empty;
 
     public int CategoryId { get; set; }
 

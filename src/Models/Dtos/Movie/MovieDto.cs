@@ -18,6 +18,10 @@ public class MovieDto
 
     public string FilePath { get; set; } = string.Empty;
 
+    public string FileDownloadUrl { get; set; } = string.Empty;
+
+    public string ImageUrl { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public int CategoryId { get; set; }

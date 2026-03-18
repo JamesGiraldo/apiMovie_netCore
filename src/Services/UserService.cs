@@ -14,17 +14,20 @@ public class UserService : IUserService {
     private readonly IMapper _mapper;
     private readonly ILogger<UserService> _logger;
     private readonly UserManager<User> _userManager;
+    private readonly IFileStorageService _fileStorageService;
 
     public UserService(
         IUserRepository userRepository,
         IMapper mapper,
         ILogger<UserService> logger,
-        UserManager<User> userManager
+        UserManager<User> userManager,
+        IFileStorageService fileStorageService
     ) {
         _userRepository = userRepository;
         _mapper = mapper;
         _logger = logger;
         _userManager = userManager;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<ICollection<UserDto>> GetUsers(string? search = null) {
@@ -38,7 +41,10 @@ public class UserService : IUserService {
                     : "No users were found.";
                 throw new NotFoundException(detail);
             }
-            var usersResponse = await Task.WhenAll(users.Select(MapUserWithRolesAsync));
+            var usersResponse = new List<UserDto>(users.Count);
+            foreach (var user in users) {
+                usersResponse.Add(await MapUserWithRolesAsync(user));
+            }
 
             return usersResponse;
         } catch (AppException) {
@@ -75,12 +81,34 @@ public class UserService : IUserService {
         }
     }
 
-    public async Task<UserDto> UpdateUser(string userId, UserDto userDto) {
+    public async Task<UserDto> UpdateUser(string userId, UserUpdateDto userDto) {
         await ValidateUpdateRequest(userId, userDto);
         try {
-            var userToUpdate = _mapper.Map<User>(userDto);
+            var currentUser = await _userRepository.GetUser(userId);
+            if (currentUser is null) throw new NotFoundException("User not found.");
+
+            var previousImageUrl = currentUser.Image;
+            FileUploadResultDto? uploadResult = null;
+            if (userDto.Image is not null) {
+                uploadResult = await _fileStorageService.UploadImageAsync(userDto.Image, "users", userId);
+            }
+
+            var userToUpdate = new User {
+                Id = userId,
+                Name = userDto.Name.Trim(),
+                UserName = userDto.UserName.Trim(),
+                Email = userDto.Email.Trim(),
+                Image = uploadResult?.Url
+            };
             var isUpdated = await _userRepository.UpdateUser(userId, userToUpdate);
-            if (!isUpdated) throw new NotFoundException("User not found.");
+            if (!isUpdated) {
+                await SafeDeleteAsync(uploadResult?.Url);
+                throw new NotFoundException("User not found.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(uploadResult?.Url)) {
+                await SafeDeleteAsync(previousImageUrl);
+            }
 
             var updatedUser = await _userRepository.GetUser(userId);
             if (updatedUser == null) throw new NotFoundException("User not found.");
@@ -123,9 +151,13 @@ public class UserService : IUserService {
     public async Task<UserDto> DeleteUser(string userId) {
         try {
             var existingUser = await ValidateDeleteRequest(userId);
+            var previousImageUrl = existingUser.Image;
 
             var isDisabled = await _userRepository.DisableUser(userId);
             if (!isDisabled) throw new NotFoundException("User not found.");
+
+            existingUser.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.Save();
 
             var userResponse = await MapUserWithRolesAsync(existingUser);
 
@@ -141,7 +173,7 @@ public class UserService : IUserService {
         }
     }
 
-    private async Task ValidateUpdateRequest(string userId, UserDto userDto) {
+    private async Task ValidateUpdateRequest(string userId, UserUpdateDto userDto) {
         ValidateId(userId, "userId");
         var validatedUserId = userId;
 
@@ -179,7 +211,10 @@ public class UserService : IUserService {
 
     private async Task<UserDto> MapUserWithRolesAsync(User user) {
         var userResponse = _mapper.Map<UserDto>(user);
+        var imageUrls = _fileStorageService.GetFileUrls(user.Image);
         var roles = await _userManager.GetRolesAsync(user);
+        userResponse.Image = imageUrls.Url;
+        userResponse.ImageUrl = imageUrls.UrlPreview;
         userResponse.Roles = roles.ToArray();
         return userResponse;
     }
@@ -187,6 +222,16 @@ public class UserService : IUserService {
     private static void ValidateId(string id, string paramName) {
         if (string.IsNullOrEmpty(id)) {
             throw new BadRequestException($"{paramName} is required.");
+        }
+    }
+
+    private async Task SafeDeleteAsync(string? fileUrl) {
+        if (string.IsNullOrWhiteSpace(fileUrl)) return;
+
+        try {
+            await _fileStorageService.DeleteByUrlAsync(fileUrl);
+        } catch (Exception ex) {
+            _logger.LogWarning(ex, "Could not delete old user image {FileUrl}", fileUrl);
         }
     }
 }

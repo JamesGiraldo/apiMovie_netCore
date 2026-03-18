@@ -65,12 +65,13 @@ public class MovieController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(201, Type = typeof(MovieCreateDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult CreateMovie([FromBody] MovieCreateDto movieDto) {
+    public IActionResult CreateMovie([FromForm] MovieCreateDto movieDto) {
         var movie = _mService.CreateMovie(movieDto);
         return this.ApiSuccess(
             title: "Movie created successfully.",
@@ -81,14 +82,15 @@ public class MovieController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("{movieId:int}", Name = "UpdateMovie")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult UpdateMovie(int movieId, [FromBody] MovieDto movieDto) {
-        var movie = _mService.UpdateMovie(movieId, movieDto);
+    public async Task<IActionResult> UpdateMovie(int movieId, [FromForm] MovieUpdateDto movieDto) {
+        var movie = await _mService.UpdateMovie(movieId, movieDto);
         return this.ApiSuccess(
             title: "Movie updated successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -98,14 +100,15 @@ public class MovieController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPut("{movieId:int}", Name = "ReplaceMovie")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult ReplaceMovie(int movieId, [FromBody] MovieDto movieDto) {
-        var movie = _mService.ReplaceMovie(movieId, movieDto);
+    public async Task<IActionResult> ReplaceMovie(int movieId, [FromForm] MovieUpdateDto movieDto) {
+        var movie = await _mService.ReplaceMovie(movieId, movieDto);
         return this.ApiSuccess(
             title: "Movie replaced successfully.",
             statusCode: StatusCodes.Status200OK,
@@ -128,4 +131,5 @@ public class MovieController : ControllerBase
             data: movie
         );
     }
+
 }

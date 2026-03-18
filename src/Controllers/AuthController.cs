@@ -20,12 +20,13 @@ public class AuthController : ControllerBase {
 
     [AllowAnonymous]
     [HttpPost("register")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(201, Type = typeof(UserResponseDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> RegisterUser([FromBody] UserCreateDto userCreateDto) {
+    public async Task<IActionResult> RegisterUser([FromForm] UserCreateDto userCreateDto) {
         var user = await _authService.RegisterUser(userCreateDto);
         return this.ApiSuccess(
             title: "User registered successfully.",

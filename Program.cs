@@ -14,10 +14,12 @@ builder.Host.UseApiSerilog();
 // add DbContext to the container with connection string from appsettings.json
 builder.Services.AddPostgresDatabase(builder.Configuration);
 
+// add file storage services (S3)
+builder.Services.AddStorageServices(builder.Configuration);
+
 // add identity to the container
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
-
 
 // add repositories
 builder.Services.AddRepositories();

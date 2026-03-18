@@ -4,7 +4,6 @@ using ApiMovies.Common.Exceptions;
 using ApiMovies.Models.Entities;
 using ApiMovies.Models.Dtos;
 using AutoMapper;
-using Microsoft.Extensions.Logging;
 
 namespace ApiMovies.Services;
 
@@ -13,15 +12,18 @@ public class MovieService : IMovieService
     private readonly IMovieRepository _mRepo;
     private readonly IMapper _mapper;
     private readonly ILogger<MovieService> _logger;
+    private readonly IFileStorageService _fileStorageService;
 
     public MovieService(
         IMovieRepository mRepo,
         IMapper mapper,
-        ILogger<MovieService> logger
+        ILogger<MovieService> logger,
+        IFileStorageService fileStorageService
     ) {
         _mRepo = mRepo;
         _mapper = mapper;
         _logger = logger;
+        _fileStorageService = fileStorageService;
     }
 
     public IEnumerable<MovieDto> GetMovies(string? search = null) {
@@ -37,7 +39,7 @@ public class MovieService : IMovieService
                 throw new NotFoundException(detail);
             }
 
-            return _mapper.Map<IEnumerable<MovieDto>>(movies);
+            return movies.Select(ToMovieDtoWithUrls).ToList();
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -60,7 +62,7 @@ public class MovieService : IMovieService
                 throw new NotFoundException(detail);
             }
 
-            return _mapper.Map<IEnumerable<MovieDto>>(movies);
+            return movies.Select(ToMovieDtoWithUrls).ToList();
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -80,7 +82,7 @@ public class MovieService : IMovieService
                 throw new NotFoundException($"Movie with id {movieId} was not found.");
             }
 
-            return _mapper.Map<MovieDto>(movie);
+            return ToMovieDtoWithUrls(movie);
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -101,7 +103,23 @@ public class MovieService : IMovieService
                 throw new InfrastructureException("Could not persist movie changes.");
             }
 
-            return _mapper.Map<MovieDto>(movie);
+            if (movieDto.Image is not null) {
+                var uploadResult = _fileStorageService.UploadImageAsync(
+                    movieDto.Image,
+                    "movies",
+                    movie.Name.ToLower().Replace(" ", "-")
+                ).GetAwaiter().GetResult();
+
+                movie.FilePath = uploadResult.Url;
+                var imageSaved = _mRepo.UpdateMovie(movie);
+                if (!imageSaved) {
+                    SafeDeleteAsync(uploadResult.Url).GetAwaiter().GetResult();
+                    _mRepo.DeleteMovie(movie.Id);
+                    throw new InfrastructureException("Could not persist movie image changes.");
+                }
+            }
+
+            return ToMovieDtoWithUrls(movie);
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -113,16 +131,43 @@ public class MovieService : IMovieService
         }
     }
 
-    public MovieDto UpdateMovie(int movieId, MovieDto movieDto) {
+    public async Task<MovieDto> UpdateMovie(int movieId, MovieUpdateDto movieDto) {
         ValidateUpdateRequest(movieId, movieDto);
         try {
+            var currentMovie = _mRepo.GetMovie(movieId);
+            if (currentMovie is null) {
+                throw new NotFoundException($"Movie with id {movieId} was not found.");
+            }
+
+            var previousImageUrl = currentMovie.FilePath;
+            FileUploadResultDto? uploadResult = null;
+            if (movieDto.Image is not null) {
+                uploadResult = await _fileStorageService.UploadImageAsync(
+                    movieDto.Image,
+                    "movies",
+                    movieDto.Name.ToLower().Replace(" ", "-")
+                );
+            }
+
             var movie = MapUpdateDtoToMovie(movieId, movieDto);
+            if (string.IsNullOrWhiteSpace(movie.FilePath)) {
+                movie.FilePath = currentMovie.FilePath;
+            }
+            if (!string.IsNullOrWhiteSpace(uploadResult?.Url)) {
+                movie.FilePath = uploadResult.Url;
+            }
+
             var updated = _mRepo.UpdateMovie(movie);
             if (!updated) {
+                await SafeDeleteAsync(uploadResult?.Url);
                 throw new InfrastructureException("Could not persist movie changes.");
             }
 
-            return _mapper.Map<MovieDto>(movie);
+            if (!string.IsNullOrWhiteSpace(uploadResult?.Url)) {
+                await SafeDeleteAsync(previousImageUrl);
+            }
+
+            return ToMovieDtoWithUrls(movie);
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -134,8 +179,8 @@ public class MovieService : IMovieService
         }
     }
 
-    public MovieDto ReplaceMovie(int movieId, MovieDto movieDto) {
-        return UpdateMovie(movieId, movieDto);
+    public async Task<MovieDto> ReplaceMovie(int movieId, MovieUpdateDto movieDto) {
+        return await UpdateMovie(movieId, movieDto);
     }
 
     public MovieDto DeleteMovie(int movieId) {
@@ -151,7 +196,9 @@ public class MovieService : IMovieService
                 throw new InfrastructureException("Could not persist movie deletion.");
             }
 
-            return _mapper.Map<MovieDto>(movieToDelete);
+            SafeDeleteAsync(movieToDelete.FilePath).GetAwaiter().GetResult();
+
+            return ToMovieDtoWithUrls(movieToDelete);
         } catch (AppException) {
             throw;
         } catch (Exception ex) {
@@ -185,7 +232,7 @@ public class MovieService : IMovieService
         }
     }
 
-    private void ValidateUpdateRequest(int movieId, MovieDto movieDto) {
+    private void ValidateUpdateRequest(int movieId, MovieUpdateDto movieDto) {
         ValidateId(movieId, "movieId");
 
         if (movieDto is null) {
@@ -225,7 +272,7 @@ public class MovieService : IMovieService
         return movie;
     }
 
-    private Movie MapUpdateDtoToMovie(int movieId, MovieDto dto) {
+    private Movie MapUpdateDtoToMovie(int movieId, MovieUpdateDto dto) {
         var movie = _mapper.Map<Movie>(dto);
         movie.Id = movieId;
         movie.Name = dto.Name.Trim();
@@ -236,5 +283,25 @@ public class MovieService : IMovieService
         if (id <= 0) {
             throw new BadRequestException($"{paramName} must be greater than 0.");
         }
+    }
+
+    private async Task SafeDeleteAsync(string? fileUrl) {
+        if (string.IsNullOrWhiteSpace(fileUrl)) {
+            return;
+        }
+
+        try {
+            await _fileStorageService.DeleteByUrlAsync(fileUrl);
+        } catch (Exception ex) {
+            _logger.LogWarning(ex, "Could not delete old movie image {FileUrl}", fileUrl);
+        }
+    }
+
+    private MovieDto ToMovieDtoWithUrls(Movie movie) {
+        var movieDto = _mapper.Map<MovieDto>(movie);
+        var fileUrls = _fileStorageService.GetFileUrls(movie.FilePath);
+        movieDto.ImageUrl = fileUrls.UrlPreview;
+        // movieDto.FileDownloadUrl = fileUrls.UrlDownload;
+        return movieDto;
     }
 }

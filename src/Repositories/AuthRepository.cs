@@ -1,4 +1,5 @@
 using ApiMovies.Interfaces.Repositories;
+using ApiMovies.Interfaces.Services;
 using ApiMovies.Models.Dtos;
 using ApiMovies.Models.Entities;
 using ApiMovies.Common.Exceptions;
@@ -17,19 +18,22 @@ public class AuthRepository : IAuthRepository {
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IMapper _mapper;
+    private readonly IFileStorageService _fileStorageService;
 
     public AuthRepository(
         IUserRepository userRepository,
         IConfiguration config,
         UserManager<User> userManager,
         RoleManager<IdentityRole> roleManager,
-        IMapper mapper
+        IMapper mapper,
+        IFileStorageService fileStorageService
     ) {
         _userRepository = userRepository;
         _secretKey = config.GetSection("ApiSettings:SecretKey");
         _userManager = userManager;
         _roleManager = roleManager;
         _mapper = mapper;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto) {
@@ -47,8 +51,11 @@ public class AuthRepository : IAuthRepository {
 
         var roles = await _userManager.GetRolesAsync(user);
         var userInfo = _mapper.Map<UserInfoDto>(user);
+        var imageUrls = _fileStorageService.GetFileUrls(user.Image);
 
         userInfo.Roles = roles.ToList();
+        userInfo.Image = imageUrls.Url;
+        userInfo.ImageUrl = imageUrls.UrlPreview;
         var token = GenerateToken(userInfo);
 
         return new UserResponseDto {
@@ -83,9 +90,24 @@ public class AuthRepository : IAuthRepository {
 
         await _userManager.AddToRoleAsync(user, "Admin");
 
+        if (userCreateDto.Image is not null) {
+            var uploadResult = await _fileStorageService.UploadImageAsync(userCreateDto.Image, "users", user.Id);
+            user.Image = uploadResult.Url;
+
+            var userUpdateResult = await _userManager.UpdateAsync(user);
+            if (!userUpdateResult.Succeeded) {
+                await SafeDeleteImageAsync(uploadResult.Url);
+                var updateErrors = string.Join(" | ", userUpdateResult.Errors.Select(e => e.Description));
+                throw new InfrastructureException($"Could not update user image after registration. {updateErrors}");
+            }
+        }
+
         var userInfo = _mapper.Map<UserInfoDto>(user);
         var roles = await _userManager.GetRolesAsync(user);
+        var imageUrls = _fileStorageService.GetFileUrls(user.Image);
         userInfo.Roles = roles.ToList();
+        userInfo.Image = imageUrls.Url;
+        userInfo.ImageUrl = imageUrls.UrlPreview;
         var token = GenerateToken(userInfo);
 
         return new UserResponseDto {
@@ -132,5 +154,17 @@ public class AuthRepository : IAuthRepository {
             Expires = DateTime.UtcNow.AddHours(24),
             SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256Signature)
         };
+    }
+
+    private async Task SafeDeleteImageAsync(string? fileUrl) {
+        if (string.IsNullOrWhiteSpace(fileUrl)) {
+            return;
+        }
+
+        try {
+            await _fileStorageService.DeleteByUrlAsync(fileUrl);
+        } catch {
+            // Intentionally swallow exceptions on compensation cleanup.
+        }
     }
 }

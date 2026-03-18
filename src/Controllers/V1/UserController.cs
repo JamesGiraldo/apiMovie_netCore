@@ -48,11 +48,12 @@ public class UserController : ControllerBase {
 
     [Authorize(Roles = "Admin")]
     [HttpPut("{userId}", Name = "UpdateUser")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUser(string userId, UserDto userDto) {
+    public async Task<IActionResult> UpdateUser(string userId, [FromForm] UserUpdateDto userDto) {
         var user = await _userService.UpdateUser(userId, userDto);
         return this.ApiSuccess(
             title: "User updated successfully.",

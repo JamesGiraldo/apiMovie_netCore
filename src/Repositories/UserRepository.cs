@@ -80,7 +80,12 @@ public class UserRepository : IUserRepository
 
         existingUser.Name = user.Name;
         existingUser.UserName = user.UserName;
+        existingUser.NormalizedUserName = (user.UserName ?? string.Empty).ToUpperInvariant();
         existingUser.Email = user.Email;
+        existingUser.NormalizedEmail = (user.Email ?? string.Empty).ToUpperInvariant();
+        if (!string.IsNullOrWhiteSpace(user.Image)) {
+            existingUser.Image = user.Image;
+        }
         existingUser.UpdatedAt = DateTime.UtcNow;
 
         _db.User.Update(existingUser);
