@@ -10,3 +10,8 @@ obj/
 *.suo
 *.log
 .DS_Store
+
+
+appsettings.Local.json
+appsettings.*.local.json
+.env
