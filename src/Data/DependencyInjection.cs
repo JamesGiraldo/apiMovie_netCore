@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMovieService, MovieService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IUserResponseFactory, UserResponseFactory>();
         services.AddScoped<IUserService, UserService>();
         return services;
     }
