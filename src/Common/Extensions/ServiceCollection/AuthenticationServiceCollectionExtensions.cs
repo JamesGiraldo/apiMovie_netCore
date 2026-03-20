@@ -4,8 +4,10 @@ using System.Text;
 
 namespace ApiMovies.Common.Extensions;
 
+// Autenticación stateless: valida el JWT firmado con la clave simétrica de configuración.
 public static class AuthenticationServiceCollectionExtensions
 {
+    // Usa ApiSettings:SecretKey para firmar/validar tokens (issuer/audience desactivados en este ejemplo).
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var secretKey = configuration.GetValue<string>("ApiSettings:SecretKey")

@@ -7,6 +7,7 @@ using Asp.Versioning;
 
 namespace ApiMovies.Controllers;
 
+// Endpoints públicos de registro (multipart) y login (JSON); versión neutral para no depender de v1/v2 en la ruta.
 [Route("api/v{version:apiVersion}/auth")]
 [ApiController]
 [ApiVersionNeutral]
@@ -18,6 +19,7 @@ public class AuthController : ControllerBase {
         _authService = authService;
     }
 
+    // Registra usuario, sube imagen opcional y devuelve JWT + perfil.
     [AllowAnonymous]
     [HttpPost("register")]
     [Consumes("multipart/form-data")]
@@ -35,6 +37,7 @@ public class AuthController : ControllerBase {
         );
     }
 
+    // Autentica por usuario o email y contraseña.
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(200, Type = typeof(UserResponseDto))]

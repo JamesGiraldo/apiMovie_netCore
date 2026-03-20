@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ApiMovies.Repositories;
 
+// Persistencia de roles Identity y asignación de usuarios mediante UserManager{User}.
 public class RoleRepository : IRoleRepository {
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;

@@ -4,8 +4,10 @@ using AutoMapper;
 
 namespace ApiMovies.MoviesMappers;
 
+// Perfil AutoMapper central: entidades de dominio ↔ DTOs de API y formularios multipart.
 public class MoviesMapper : Profile
 {
+    // Registra todos los mapeos bidireccionales usados por servicios y factorías de respuesta.
     public MoviesMapper()
     {
         CreateMap<Category, CategoryDto>().ReverseMap();
@@ -20,4 +22,5 @@ public class MoviesMapper : Profile
         CreateMap<User, UserLoginDto>().ReverseMap();
         CreateMap<User, UserResponseDto>().ReverseMap();
     }
+
 }

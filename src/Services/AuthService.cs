@@ -6,7 +6,9 @@ using ApiMovies.Common.Exceptions;
 
 namespace ApiMovies.Services;
 
-public class AuthService : IAuthService {
+// Orquesta login y registro: validación, Identity, rol Registered, subida opcional de imagen y emisión de JWT.
+public class AuthService : IAuthService
+{
 
     private readonly IAuthRepository _authRepository;
     private readonly IUserRepository _userRepository;
@@ -20,7 +22,8 @@ public class AuthService : IAuthService {
         IRoleService roleService,
         IFileStorageService fileStorageService,
         IUserResponseFactory userResponseFactory
-    ) {
+    )
+    {
         _authRepository = authRepository;
         _userRepository = userRepository;
         _roleService = roleService;
@@ -28,28 +31,38 @@ public class AuthService : IAuthService {
         _userResponseFactory = userResponseFactory;
     }
 
-    public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto) {
-        try {
+    public async Task<UserResponseDto> LoginUser(UserLoginDto userLoginDto)
+    {
+        try
+        {
             ValidateLoginUser(userLoginDto);
             var user = await _authRepository.GetUserForLogin(userLoginDto.UserName, userLoginDto.Email);
             const string InvalidCredentialsMessage = "Invalid credentials.";
 
-            if (user is null) {
+            if (user is null)
+            {
                 throw new UnauthorizedException(InvalidCredentialsMessage);
+
             }
 
             var isValid = await _authRepository.ValidatePassword(user, userLoginDto.Password);
-            if (!isValid) {
+            if (!isValid)
+            {
                 throw new UnauthorizedException(InvalidCredentialsMessage);
+
             }
 
             var roles = await _roleService.GetUserRoles(user.Id);
             var response = _userResponseFactory.Create(user, roles);
 
             return response;
-        } catch (AppException) {
+        }
+        catch (AppException)
+        {
             throw;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             throw new InfrastructureException(
                 "An unexpected error occurred while logging in.",
                 ex
@@ -57,21 +70,29 @@ public class AuthService : IAuthService {
         }
     }
 
-    public async Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto) {
-        try {
+    public async Task<UserResponseDto> RegisterUser(UserCreateDto userCreateDto)
+    {
+        try
+        {
             await ValidateRegisterUserAsync(userCreateDto);
             var user = await _authRepository.RegisterUser(userCreateDto);
             await _roleService.EnsureUserHasRole(user.Id, RoleNames.Registered);
 
-            if (userCreateDto.Image is not null) {
+            if (userCreateDto.Image is not null)
+            {
                 var uploadResult = await _fileStorageService.UploadImageAsync(userCreateDto.Image, "users", user.Id);
                 user.Image = uploadResult.Url;
 
-                try {
+                try
+                {
                     await _authRepository.UpdateUser(user);
-                } catch {
+                }
+                catch
+                {
+                    // Compensación: si falla el Update tras subir a S3, evita dejar el objeto huérfano.
                     await SafeDeleteImageAsync(uploadResult.Url);
                     throw;
+
                 }
             }
 
@@ -79,9 +100,13 @@ public class AuthService : IAuthService {
             var response = _userResponseFactory.Create(user, roles);
 
             return response;
-        } catch (AppException) {
+        }
+        catch (AppException)
+        {
             throw;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             throw new InfrastructureException(
                 "An unexpected error occurred while registering the user.",
                 ex
@@ -90,38 +115,51 @@ public class AuthService : IAuthService {
     }
 
 
-    private static void ValidateLoginUser(UserLoginDto userLoginDto) {
-        if (string.IsNullOrWhiteSpace(userLoginDto.UserName) && string.IsNullOrWhiteSpace(userLoginDto.Email)) {
+    private static void ValidateLoginUser(UserLoginDto userLoginDto)
+    {
+        if (string.IsNullOrWhiteSpace(userLoginDto.UserName) && string.IsNullOrWhiteSpace(userLoginDto.Email))
+        {
             throw new BadRequestException("User name or email is required.");
         }
     }
 
-    private async Task ValidateUserNameAsync(string userName) {
-        if (await _userRepository.UserNameExists(userName)) {
+    private async Task ValidateUserNameAsync(string userName)
+    {
+        if (await _userRepository.UserNameExists(userName))
+        {
             throw new ConflictException("User name already exists.");
         }
     }
 
-    private async Task ValidateRegisterUserAsync(UserCreateDto userCreateDto) {
+    private async Task ValidateRegisterUserAsync(UserCreateDto userCreateDto)
+    {
         await ValidateEmailAsync(userCreateDto.Email);
         await ValidateUserNameAsync(userCreateDto.UserName);
     }
 
-    private async Task ValidateEmailAsync(string email) {
-        if (await _userRepository.EmailExists(email)) {
+    private async Task ValidateEmailAsync(string email)
+    {
+        if (await _userRepository.EmailExists(email))
+        {
             throw new ConflictException("Email already exists.");
         }
     }
 
-    private async Task SafeDeleteImageAsync(string? fileUrl) {
-        if (string.IsNullOrWhiteSpace(fileUrl)) {
+    private async Task SafeDeleteImageAsync(string? fileUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl))
+        {
             return;
         }
 
-        try {
+        try
+        {
             await _fileStorageService.DeleteByUrlAsync(fileUrl);
-        } catch {
+        }
+        catch
+        {
             // Intentionally swallow exceptions on compensation cleanup.
+
         }
     }
 }

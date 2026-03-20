@@ -3,8 +3,13 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace ApiMovies.Data;
 
+// Fábrica en tiempo de diseño para EF Core: permite ejecutar migraciones y herramientas (dotnet ef)
+// sin levantar la aplicación, cargando la cadena de conexión desde configuración local.
 public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
+    // Crea un ApplicationDbContext usando appsettings, user secrets y variables de entorno.
+    // Parámetro args: Argumentos de la CLI de EF (normalmente no se usan aquí).
+    // Retorna: Contexto configurado con Npgsql y la cadena ConexionSql.
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var basePath = Directory.GetCurrentDirectory();

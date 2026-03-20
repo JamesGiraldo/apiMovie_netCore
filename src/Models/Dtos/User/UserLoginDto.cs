@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 namespace ApiMovies.Models.Dtos;
 
+// Credenciales de login: al menos uno de usuario o email más contraseña (validación cruzada en servicio).
 public class UserLoginDto {
 
     [MaxLength(100, ErrorMessage = "The username must be less than 100 characters")]

@@ -8,6 +8,7 @@ using AutoMapper;
 
 namespace ApiMovies.Services;
 
+// Reglas de películas: búsqueda, CRUD, unicidad de nombre y ciclo de vida de imagen en almacenamiento S3.
 public class MovieService : IMovieService
 {
     private readonly IMovieRepository _movieRepository;
@@ -134,6 +135,7 @@ public class MovieService : IMovieService
                 movie.FilePath = uploadResult.Url;
                 var imageSaved = await _movieRepository.UpdateMovie(movie);
                 if (!imageSaved) {
+                    // Rollback: quitar archivo subido y fila creada si no se pudo guardar la ruta.
                     await SafeDeleteAsync(uploadResult.Url);
                     await _movieRepository.DeleteMovie(movie.Id);
                     throw new InfrastructureException("Could not persist movie image changes.");
@@ -185,6 +187,7 @@ public class MovieService : IMovieService
             }
 
             if (!string.IsNullOrWhiteSpace(uploadResult?.Url)) {
+                // Sustitución de imagen: borrar la anterior solo tras persistir la nueva URL.
                 await SafeDeleteAsync(previousImageUrl);
             }
 
@@ -231,10 +234,7 @@ public class MovieService : IMovieService
         }
     }
 
-    /*
-     * Methods private to validate the create request
-    */
-
+    // Valida payload de alta y nombre único antes de tocar la base de datos.
     private async Task ValidateCreateRequestAsync(MovieCreateDto movieDto) {
         if (movieDto is null) {
             throw new BadRequestException("Movie payload is required.");
@@ -318,6 +318,7 @@ public class MovieService : IMovieService
         }
     }
 
+    // Enriquece el DTO con URL de vista previa firmada (descarga opcional comentada en código).
     private MovieDto ToMovieDtoWithUrls(Movie movie) {
         var movieDto = _mapper.Map<MovieDto>(movie);
         var fileUrls = _fileStorageService.GetFileUrls(movie.FilePath);

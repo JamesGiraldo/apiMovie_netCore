@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMovies.Controllers.V1;
 
+// Gestión de usuarios: listado actualmente sin restricción de rol en código (revisar producción); resto de acciones solo Admin.
 [Route("api/v{version:apiVersion}/user")]
 [ApiController]
 public class UserController : ControllerBase
@@ -19,6 +20,7 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
+    // Listado paginado de usuarios activos con búsqueda opcional.
     // [Authorize(Roles = "Admin")]
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(PagedResult<UserDto>))]
@@ -44,6 +46,7 @@ public class UserController : ControllerBase
         );
     }
 
+    // Obtiene un usuario por id (Admin).
     [Authorize(Roles = "Admin")]
     [HttpGet("{userId}", Name = "GetUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
@@ -60,6 +63,7 @@ public class UserController : ControllerBase
         );
     }
 
+    // Actualiza perfil y foto opcional vía multipart (Admin).
     [Authorize(Roles = "Admin")]
     [HttpPut("{userId}", Name = "UpdateUser")]
     [Consumes("multipart/form-data")]
@@ -77,6 +81,7 @@ public class UserController : ControllerBase
         );
     }
 
+    // Reactiva un usuario deshabilitado (Admin).
     [Authorize(Roles = "Admin")]
     [HttpPut("{userId}/activate", Name = "ActivateUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]
@@ -93,6 +98,7 @@ public class UserController : ControllerBase
         );
     }
 
+    // Baja lógica: desactiva y bloquea al usuario (Admin).
     [Authorize(Roles = "Admin")]
     [HttpDelete("{userId}", Name = "DeleteUser")]
     [ProducesResponseType(200, Type = typeof(UserDto))]

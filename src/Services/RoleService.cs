@@ -5,6 +5,7 @@ using ApiMovies.Models.Dtos;
 
 namespace ApiMovies.Services;
 
+// Coordina repositorio de roles y usuarios para listar roles, asignar y consultar membresías.
 public class RoleService : IRoleService {
     private readonly IRoleRepository _roleRepository;
     private readonly IUserRepository _userRepository;
@@ -40,6 +41,7 @@ public class RoleService : IRoleService {
                 throw new NotFoundException($"Role with id {assignUserRoleDto.RoleId} was not found.");
             }
 
+            // Idempotente: si ya tenía el rol, no duplica; luego devuelve la lista ordenada.
             await EnsureUserHasRole(userId, role.Name);
             var roles = await GetUserRoles(userId);
             var user = await _userRepository.GetUser(userId)

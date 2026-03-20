@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiMovies.Models.Dtos;
 
+// Actualización de perfil por administrador; Id debe coincidir con el segmento de ruta.
 public class UserUpdateDto
 {
     [Required(ErrorMessage = "The id is required")]
@@ -30,5 +31,6 @@ public class UserUpdateDto
     [MaxLength(100, ErrorMessage = "The email must be less than 100 characters")]
     public string Email { get; set; } = string.Empty;
 
+    // Nueva imagen opcional; reemplazo gestionado en UserService.
     public IFormFile? Image { get; set; }
 }

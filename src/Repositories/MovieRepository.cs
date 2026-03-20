@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApiMovies.Repositories;
 
+// Repositorio EF Core para Movie con inclusión de Category y búsquedas ILIKE.
 public class MovieRepository : IMovieRepository
 {
     private readonly ApplicationDbContext _db;

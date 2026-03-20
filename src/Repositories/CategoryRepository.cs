@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApiMovies.Repositories;
 
+// Repositorio EF Core para Category: filtros ILIKE y operaciones CRUD sobre el contexto compartido.
 public class CategoryRepository : ICategoryRepository
 {
     private readonly ApplicationDbContext _context;

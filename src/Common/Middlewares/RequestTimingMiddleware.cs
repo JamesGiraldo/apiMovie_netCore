@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace ApiMovies.Common.Middlewares;
 
+// Registra en consola/log cada petición HTTP: hora de entrada, duración, código de estado y colores por severidad.
 public class RequestTimingMiddleware
 {
     private readonly RequestDelegate _next;
@@ -22,6 +23,7 @@ public class RequestTimingMiddleware
         _logger = logger;
     }
 
+    // Mide el tiempo entre el inicio y el fin del pipeline (incluye controladores y middleware posterior).
     public async Task InvokeAsync(HttpContext context)
     {
         var sw = Stopwatch.StartNew();
@@ -68,7 +70,7 @@ public class RequestTimingMiddleware
     {
         if (hasException)
         {
-            // GlobalExceptionMiddleware already logs full details for failures.
+            // El middleware global ya deja traza detallada del error; aquí solo marcamos advertencia de cierre.
             return LogLevel.Warning;
         }
 

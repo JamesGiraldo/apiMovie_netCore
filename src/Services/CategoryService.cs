@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ApiMovies.Services;
 
+// Lógica de negocio de categorías: validación de unicidad, paginación en memoria y mapeo a DTOs.
 public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _categoryRepository;
@@ -30,6 +31,7 @@ public class CategoryService : ICategoryService
             var categories = await _categoryRepository.GetCategories(search);
             var hasSearch = !string.IsNullOrWhiteSpace(search);
 
+            // Listado global vacío => 404; con filtro de búsqueda se permite conjunto vacío (respuesta paginada vacía).
             if (!hasSearch && categories.Count == 0) {
                 throw new NotFoundException("No categories were found.");
             }

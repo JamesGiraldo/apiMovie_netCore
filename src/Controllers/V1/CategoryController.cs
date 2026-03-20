@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiMovies.Controllers.V1;
 
+// API REST de categorías: lectura pública con caché en listado; escritura restringida a Admin.
 [Route("api/v{version:apiVersion}/category")]
 [ApiController]
 public class CategoryController : ControllerBase
@@ -18,6 +19,7 @@ public class CategoryController : ControllerBase
         _categoryService = categoryService;
     }
 
+    // Listado paginado con búsqueda opcional por nombre.
     [AllowAnonymous]
     [HttpGet]
     [ResponseCache(CacheProfileName = "30Seconds")]
@@ -44,6 +46,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    // Obtiene una categoría por id.
     [AllowAnonymous]
     [HttpGet("{categoryId:int}", Name = "GetCategory")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -60,6 +63,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    // Crea categoría (solo Admin).
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(201, Type = typeof(CategoryCreateDto))]
@@ -77,6 +81,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    // Actualización parcial semántica (PATCH).
     [Authorize(Roles = "Admin")]
     [HttpPatch("{categoryId:int}", Name = "UpdateCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]
@@ -94,6 +99,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    // Reemplazo completo (PUT); misma validación que PATCH en capa de servicio.
     [Authorize(Roles = "Admin")]
     [HttpPut("{categoryId:int}", Name = "ReplaceCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]
@@ -111,6 +117,7 @@ public class CategoryController : ControllerBase
         );
     }
 
+    // Elimina categoría y devuelve el registro eliminado.
     [Authorize(Roles = "Admin")]
     [HttpDelete("{categoryId:int}", Name = "DeleteCategory")]
     [ProducesResponseType(200, Type = typeof(CategoryDto))]

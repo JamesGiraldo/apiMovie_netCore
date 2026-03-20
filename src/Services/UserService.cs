@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace ApiMovies.Services;
 
+// Gestión de usuarios para administración: listado activo, actualización con imagen, activación y baja lógica.
 public class UserService : IUserService {
 
     private readonly IUserRepository _userRepository;

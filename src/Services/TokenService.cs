@@ -8,6 +8,7 @@ using System.Text;
 
 namespace ApiMovies.Services;
 
+// Genera JWT simétricos (HMAC-SHA256) con vigencia fija de 24 horas.
 public class TokenService : ITokenService {
     private readonly IConfigurationSection _secretKey;
 

@@ -5,11 +5,12 @@ using ApiMovies.Services;
 
 namespace ApiMovies.Data;
 
+// Registro central de repositorios (acceso a datos) y servicios de aplicación (casos de uso).
 public static class DependencyInjection
 {
+    // Cada repositorio vive en scope HTTP: nueva instancia por petición (adecuado con DbContext scoped).
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        // add repositories
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IMovieRepository, MovieRepository>();
@@ -18,9 +19,9 @@ public static class DependencyInjection
         return services;
     }
 
+    // Servicios que orquestan validación, mapeos y llamadas a repositorios / storage.
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        // add services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMovieService, MovieService>();

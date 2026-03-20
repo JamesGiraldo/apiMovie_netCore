@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApiMovies.Common.Extensions;
 
+// Configura Entity Framework Core con PostgreSQL (Npgsql).
 public static class DatabaseServiceCollectionExtensions
 {
+    // Lee la cadena ConexionSql y registra ApplicationDbContext como scoped.
     public static IServiceCollection AddPostgresDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("ConexionSql")

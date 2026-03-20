@@ -5,6 +5,7 @@ using AutoMapper;
 
 namespace ApiMovies.Services;
 
+// Compone la respuesta de autenticación: claims visibles, URLs de avatar y token con la misma ventana de expiración declarada.
 public class UserResponseFactory : IUserResponseFactory {
     private readonly IMapper _mapper;
     private readonly IFileStorageService _fileStorageService;

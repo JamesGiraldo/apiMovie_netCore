@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMovies.Controllers.V1;
 
+// CRUD y consultas de películas; creación/actualización con multipart/form-data para imagen opcional.
 [Route("api/v{version:apiVersion}/movie")]
 [ApiController]
 public class MovieController : ControllerBase
@@ -18,6 +19,7 @@ public class MovieController : ControllerBase
         _movieService = movieService;
     }
 
+    // Catálogo paginado o búsqueda por texto en nombre/descripción.
     [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -43,6 +45,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Detalle de película por id.
     [AllowAnonymous]
     [HttpGet("{movieId:int}", Name = "GetMovie")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -59,6 +62,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Películas de una categoría con filtro opcional y paginación.
     [AllowAnonymous]
     [HttpGet("category/{categoryId:int}", Name = "GetMoviesByCategory")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -87,6 +91,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Alta de película con imagen opcional (Admin).
     [Authorize(Roles = "Admin")]
     [HttpPost]
     [Consumes("multipart/form-data")]
@@ -105,6 +110,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Actualización parcial con posible nueva imagen.
     [Authorize(Roles = "Admin")]
     [HttpPatch("{movieId:int}", Name = "UpdateMovie")]
     [Consumes("multipart/form-data")]
@@ -124,6 +130,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Reemplazo completo; en servicio equivale al flujo de actualización.
     [Authorize(Roles = "Admin")]
     [HttpPut("{movieId:int}", Name = "ReplaceMovie")]
     [Consumes("multipart/form-data")]
@@ -143,6 +150,7 @@ public class MovieController : ControllerBase
         );
     }
 
+    // Borra película y su archivo en almacenamiento si aplica.
     [Authorize(Roles = "Admin")]
     [HttpDelete("{movieId:int}", Name = "DeleteMovie")]
     [ProducesResponseType(200, Type = typeof(MovieDto))]

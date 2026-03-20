@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace ApiMovies.Common.Responses;
 
+// Atajos en controladores para devolver ApiResponse con el StatusCode HTTP coherente.
 public static class ControllerResponseExtensions
 {
+    // Respuesta 2xx con cuerpo ApiResponse y Success = true.
     public static IActionResult ApiSuccess(
         this ControllerBase controller,
         string title,
@@ -16,6 +18,7 @@ public static class ControllerResponseExtensions
         return new ObjectResult(response) { StatusCode = statusCode };
     }
 
+    // Respuesta de error explícita con título y código HTTP.
     public static IActionResult ApiFailure(
         this ControllerBase controller,
         string title,
@@ -27,6 +30,7 @@ public static class ControllerResponseExtensions
         return new ObjectResult(response) { StatusCode = statusCode };
     }
 
+    // Convierte ModelStateDictionary en un diccionario de errores por campo dentro de Data.
     public static IActionResult ApiValidationFailure(
         this ControllerBase controller,
         ModelStateDictionary modelState,

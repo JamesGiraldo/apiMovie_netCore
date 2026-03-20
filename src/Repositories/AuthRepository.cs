@@ -5,6 +5,7 @@ using ApiMovies.Common.Exceptions;
 using Microsoft.AspNetCore.Identity;
 namespace ApiMovies.Repositories;
 
+// Adaptador Identity para registro, login (búsqueda de usuario + verificación de contraseña) y actualización de perfil.
 public class AuthRepository : IAuthRepository {
 
     private readonly IUserRepository _userRepository;

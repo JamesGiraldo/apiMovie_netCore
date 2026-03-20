@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiMovies.Controllers.V1;
 
+// Operaciones de roles reservadas a administradores: listar y asignar rol a usuario.
 [Route("api/v{version:apiVersion}/roles")]
 [ApiController]
 [Authorize(Roles = RoleNames.Admin)]
@@ -17,6 +18,7 @@ public class RoleController : ControllerBase {
         _roleService = roleService;
     }
 
+    // Lista todos los roles de Identity (crea los predeterminados si faltan).
     [HttpGet]
     [ProducesResponseType(200, Type = typeof(IReadOnlyCollection<RoleDto>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -31,6 +33,7 @@ public class RoleController : ControllerBase {
         );
     }
 
+    // Asigna un rol por su id al usuario indicado en la ruta.
     [HttpPost("users/{userId}")]
     [ProducesResponseType(200, Type = typeof(UserRolesDto))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

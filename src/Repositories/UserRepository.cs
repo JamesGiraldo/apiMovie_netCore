@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ApiMovies.Repositories;
 
+// Acceso directo a la tabla User del contexto: consultas por estado activo y actualizaciones de perfil/bloqueo.
 public class UserRepository : IUserRepository
 {
     private readonly ApplicationDbContext _db;
@@ -114,5 +115,4 @@ public class UserRepository : IUserRepository
         _db.User.Update(existingUser);
         return await _db.SaveChangesAsync() > 0;
     }
-
 }

@@ -2,12 +2,15 @@ using Microsoft.OpenApi;
 
 namespace ApiMovies.Common.Extensions;
 
+// Genera documentos OpenAPI (Swagger) por versión e integra seguridad Bearer JWT en la UI.
 public static class SwaggerServiceCollectionExtensions
 {
+    // Registra dos documentos (v1 y v2) y el esquema de autorización por cabecera Authorization.
     public static IServiceCollection AddApiSwagger(this IServiceCollection services)
     {
         services.AddSwaggerGen(options =>
         {
+            // Aparece como candado en Swagger UI: enviar "Bearer {token}".
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -17,6 +20,7 @@ public static class SwaggerServiceCollectionExtensions
                 Type = SecuritySchemeType.Http
             });
 
+            // Todas las operaciones pueden requerir el esquema Bearer (según atributos en controladores).
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 {

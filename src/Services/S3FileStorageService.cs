@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace ApiMovies.Services;
 
+// Implementación AWS S3: subida con validación de tipo/tamaño, URLs públicas y firmadas, y borrado por clave derivada de URL.
 public class S3FileStorageService : IFileStorageService
 {
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
